@@ -20,7 +20,7 @@ fn main() -> Result<(), String> {
 fn create_databases() -> Result<Connection, String> {
     let conn = Connection::open(DATABASE_NAME)
         .map_err(|_| format!("Failed to open database {DATABASE_NAME}"))?;
-    conn.execute(format!("create table if not exists {ACTORS_TABLE_NAME} ( id integer primary key, name text not null)"))
+    conn.execute(format!("CREATE TABLE IF NOT EXISTS {ACTORS_TABLE_NAME} ( id integer, name text not null)"))
         .map_err(|_| String::from("Could not create table for actor names"))?;
 
     Ok(conn)
@@ -34,8 +34,8 @@ fn fill_names_database(conn: &Connection) -> Result<(), String> {
         let values: Vec<&str> = l.split('\t').collect();
         let id: u32 = values.first().unwrap()[2..].parse().unwrap();
         let name = values.get(1).unwrap();
-        conn.execute(format!("INSERT INTO {DATABASE_NAME} VALUES({id}, {name}"))
-            .map_err(|_| format!("Could not insert values {id}, {name}")).unwrap();
+        conn.execute(format!("INSERT INTO {ACTORS_TABLE_NAME} VALUES({id}, {name}"))
+            .map_err(|_| format!("Could not insert values {id}, {name} into {ACTORS_TABLE_NAME}")).unwrap();
     });
 
     Ok(())
