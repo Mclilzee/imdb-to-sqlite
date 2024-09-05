@@ -3,6 +3,9 @@ use std::{
     io::{BufRead, BufReader},
 };
 
+use sqlx::{Connection, Error};
+
+
 const ACTORS_TSV_FILE: &str = "name.basics.tsv";
 
 const DATABASE_NAME: &str = "imdb.db";
@@ -13,17 +16,16 @@ struct Actor<'a> {
     name: &'a str,
 }
 
-fn main() -> Result<(), String> {
-    let conn = create_databases()?;
+fn main() -> Result<(), Error> {
+    let conn = create_tables()?;
     fill_names_database(&conn)?;
 
     println!("Finished Converting.");
     Ok(())
 }
 
-fn create_databases() -> Result<Connection, String> {
-    let conn = Connection::open(DATABASE_NAME)
-        .map_err(|_| format!("Failed to open database {DATABASE_NAME}"))?;
+fn create_tables() -> Result<dyn Connection, Error> {
+    let conn = Connection::connect(DATABASE_NAME).await;
     conn.execute(format!("CREATE TABLE IF NOT EXISTS {ACTORS_TABLE_NAME} ( id integer primary key, name text not null)"))
         .map_err(|_| String::from("Could not create table for actor names"))?;
 
