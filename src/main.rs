@@ -1,10 +1,8 @@
+use sqlx::{sqlite::SqlitePoolOptions, Error, SqlitePool};
 use std::{
     fs::File,
     io::{BufRead, BufReader},
 };
-
-use sqlx::{Connection, Error};
-
 
 const ACTORS_TSV_FILE: &str = "name.basics.tsv";
 
@@ -16,23 +14,30 @@ struct Actor<'a> {
     name: &'a str,
 }
 
+#[tokio::main]
 fn main() -> Result<(), Error> {
-    let conn = create_tables()?;
-    fill_names_database(&conn)?;
+    let pool = create_tables().await?;
+    fill_names_database(&pool)?;
 
     println!("Finished Converting.");
     Ok(())
 }
 
-fn create_tables() -> Result<dyn Connection, Error> {
-    let conn = Connection::connect(DATABASE_NAME).await;
-    conn.execute(format!("CREATE TABLE IF NOT EXISTS {ACTORS_TABLE_NAME} ( id integer primary key, name text not null)"))
-        .map_err(|_| String::from("Could not create table for actor names"))?;
+async fn create_tables() -> Result<SqlitePool, Error> {
+    let pool = SqlitePoolOptions::new()
+        .max_connections(5)
+        .connect(DATABASE_NAME)
+        .await?;
 
-    Ok(conn)
+    sqlx::query("CREATE TABLE IF NOT EXISTS {$1} ( id integer primary key, name text not null)")
+        .bind(ACTORS_TABLE_NAME)
+        .fetch_one(&pool)
+        .await?;
+
+    Ok(pool)
 }
 
-fn fill_names_database(conn: &Connection) -> Result<(), String> {
+fn fill_names_database(pool: &SqlitePool) -> Result<(), String> {
     let names =
         File::open(ACTORS_TSV_FILE).map_err(|_| String::from("Failed to read name.basics.tsv"))?;
     let reader = BufReader::new(names);
@@ -40,10 +45,12 @@ fn fill_names_database(conn: &Connection) -> Result<(), String> {
         let values: Vec<&str> = l.split('\t').collect();
         let id: u32 = values.first().unwrap()[2..].parse().unwrap();
         let name = values.get(1).unwrap();
-        conn.execute(format!(
-            "INSERT INTO {ACTORS_TABLE_NAME} VALUES({id}, \"{name}\")"
-        ))
-        .unwrap();
+        sqlx::query("INSERT INTO $1 VALUES($2, '$3')")
+            .bind(ACTORS_TABLE_NAME)
+            .bind(id)
+            .bind(name)
+            .fetch_one(&pool)
+            .await?;
     });
 
     Ok(())
