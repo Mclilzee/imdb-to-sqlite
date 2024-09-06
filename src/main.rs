@@ -9,9 +9,12 @@ const ACTORS_TSV_FILE: &str = "name.basics.tsv";
 const DATABASE_NAME: &str = "imdb.db";
 const ACTORS_TABLE_NAME: &str = "actors";
 
+#[derive(Debug)]
 struct Actor {
     id: u32,
     name: String,
+    birth_date: Option<u16>,
+    death_date: Option<u16>
 }
 
 impl Actor {
@@ -19,8 +22,10 @@ impl Actor {
         let values: Vec<&str> = line.split('\t').collect();
         let id: u32 = values.first().unwrap()[2..].parse().unwrap();
         let name = values.get(1).unwrap().to_string();
+        let birth_date = values.get(2).and_then(|v| v.parse::<u16>().ok());
+        let death_date = values.get(3).and_then(|v| v.parse::<u16>().ok());
 
-        Self { id, name }
+        Self { id, name, birth_date, death_date }
     }
 }
 
@@ -57,12 +62,13 @@ async fn fill_names_database(pool: &SqlitePool) -> Result<(), String> {
         .map_while(Result::ok)
         .map(Actor::from)
     {
-        sqlx::query("INSERT INTO $1 VALUES($2, $3)")
-            .bind(ACTORS_TABLE_NAME)
+        sqlx::query(format!("INSERT INTO {ACTORS_TABLE_NAME} VALUES($1, $2, $3, $4)").as_str())
             .bind(actor.id)
             .bind(&actor.name)
+            .bind(actor.birth_date)
+            .bind(actor.death_date)
             .fetch_one(pool)
-            .await.ok();
+            .await.map_err(|e| format!("Unable to insert {actor:?} into table {ACTORS_TABLE_NAME} => {e}"))?;
     }
 
     Ok(())
