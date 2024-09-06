@@ -4,8 +4,8 @@ use std::{
     io::{BufRead, BufReader},
 };
 
+const MAX_CONNECTIONS: u32 = 20;
 const ACTORS_TSV_FILE: &str = "name.basics.tsv";
-
 const DATABASE_NAME: &str = "imdb.db";
 const ACTORS_TABLE_NAME: &str = "actors";
 
@@ -40,14 +40,14 @@ async fn main() -> Result<(), String> {
 
 async fn create_tables() -> Result<SqlitePool, String> {
     let pool = SqlitePoolOptions::new()
-        .max_connections(5)
+        .max_connections(MAX_CONNECTIONS)
         .connect(DATABASE_NAME)
         .await
         .map_err(|e| format!("Unable to connect to {DATABASE_NAME} -> {e}"))?;
 
     sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {ACTORS_TABLE_NAME} (id integer primary key, name text not null, birth_year integer, death_year integer)").as_str())
-        .fetch_one(&pool)
-        .await.map_err(|e| format!("Unable to create actors table -> {e}")).ok();
+        .execute(&pool)
+        .await.map_err(|e| format!("Unable to create actors table -> {e}"))?;
 
     Ok(pool)
 }
@@ -67,7 +67,7 @@ async fn fill_names_database(pool: &SqlitePool) -> Result<(), String> {
             .bind(&actor.name)
             .bind(actor.birth_date)
             .bind(actor.death_date)
-            .fetch_one(pool)
+            .execute(pool)
             .await.map_err(|e| format!("Unable to insert {actor:?} into table {ACTORS_TABLE_NAME} => {e}"))?;
     }
 
