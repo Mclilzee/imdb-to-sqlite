@@ -18,13 +18,13 @@ impl Actor {
         let professions = values
             .get(4)
             .map(|&v| v.split(',').map(|v| v.to_string()).collect::<Vec<_>>())
-            .unwrap_or_default();
+            .unwrap();
 
         let titles = values
             .get(5)
             .map(|v| v.split(','))
-            .map(|v| v.flat_map(|n| n.parse::<u32>()).collect::<Vec<_>>())
-            .unwrap_or_default();
+            .map(|v| v.flat_map(|n| n[2..].parse::<u32>()).collect::<Vec<_>>())
+            .unwrap();
 
         Self {
             id,
