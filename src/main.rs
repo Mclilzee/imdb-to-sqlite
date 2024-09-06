@@ -59,25 +59,64 @@ async fn create_tables() -> Result<SqlitePool, String> {
 }
 
 async fn fill_names_database(pool: &SqlitePool) -> Result<(), String> {
+    println!("Parsing actors.");
     let names = File::open(ACTORS_TSV_FILE)
         .map_err(|e| format!("Unable to read from {ACTORS_TSV_FILE} -> {e}"))?;
     let reader = BufReader::new(names);
-    let query = format!("INSERT INTO {ACTORS_TABLE_NAME} VALUES($1, $2, $3, $4)");
-    let futures_chunks =  reader
+    let actors = reader
         .lines()
         .skip(1)
         .map_while(Result::ok)
-        .map(Actor::from).map(|actor| {
-            sqlx::query(&query)
-                .bind(actor.id)
-                .bind(actor.name)
-                .bind(actor.birth_date)
-                .bind(actor.death_date)
-                .execute(pool)
-        }).collect::<Vec<_>>().chunks(1000).collect::<Vec<_>>();
+        .map(Actor::from)
+        .collect::<Vec<_>>();
 
-    println!("Parsed actors");
+    println!("Parsed actors, Preparing transactions");
 
+    let mut tx = pool
+        .begin()
+        .await
+        .map_err(|e| format!("Failed to start transaction => {e}"))?;
+    let query = format!("INSERT INTO {ACTORS_TABLE_NAME} VALUES($1, $2, $3, $4)");
+    let mut percentage: u8 = 0;
+    for (i, actor) in actors.iter().enumerate() {
+        sqlx::query(&query)
+            .bind(actor.id)
+            .bind(&actor.name)
+            .bind(actor.birth_date)
+            .bind(actor.death_date)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| format!("Failed to insert {actor:?} into {ACTORS_TABLE_NAME} => {e}"))?;
+
+        if i % 1000000 == 0 {
+            let new_percentage: f32 = (i as f32 / actors.len() as f32) * 100.0;
+            let new_percentage = new_percentage as u8;
+            if new_percentage > percentage {
+                percentage = new_percentage;
+                print_percentage(percentage);
+            }
+        }
+    }
+
+    println!("Started commiting transactions");
+    tx.commit()
+        .await
+        .map_err(|e| format!("Failed to commit transactions => {e}"))?;
 
     Ok(())
+}
+
+fn print_percentage(n: u8) {
+    assert!((0..=100).contains(&n));
+
+    print!("[");
+    for i in 0..=100 {
+        if i <= n {
+            print!("#");
+        } else {
+            print!("-");
+        }
+    }
+
+    println!("] {n}%");
 }
