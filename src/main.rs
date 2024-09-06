@@ -42,7 +42,7 @@ async fn create_tables() -> Result<SqlitePool, String> {
 
     sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {ACTORS_TABLE_NAME} (id integer primary key, name text not null, birth_year integer, death_year integer)").as_str())
         .fetch_one(&pool)
-        .await.map_err(|e| format!("Unable to create actors table -> {e}"))?;
+        .await.map_err(|e| format!("Unable to create actors table -> {e}")).ok();
 
     Ok(pool)
 }
@@ -62,7 +62,7 @@ async fn fill_names_database(pool: &SqlitePool) -> Result<(), String> {
             .bind(actor.id)
             .bind(&actor.name)
             .fetch_one(pool)
-            .await.unwrap();
+            .await.ok();
     }
 
     Ok(())
