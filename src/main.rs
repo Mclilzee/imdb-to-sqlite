@@ -1,5 +1,6 @@
 mod actor;
 
+use actor::Actor;
 use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
 use std::{
     fs::File,
@@ -14,7 +15,7 @@ const ACTORS_TABLE_NAME: &str = "actors";
 #[tokio::main]
 async fn main() -> Result<(), String> {
     let pool = create_tables().await?;
-    fill_names_database(&pool).await?;
+    fill_actors_table(&pool).await?;
 
     println!("Finished Converting.");
     Ok(())
@@ -34,7 +35,7 @@ async fn create_tables() -> Result<SqlitePool, String> {
     Ok(pool)
 }
 
-async fn fill_names_database(pool: &SqlitePool) -> Result<(), String> {
+async fn fill_actors_table(pool: &SqlitePool) -> Result<(), String> {
     println!("Parsing actors.");
     let names = File::open(ACTORS_TSV_FILE)
         .map_err(|e| format!("Unable to read from {ACTORS_TSV_FILE} -> {e}"))?;
@@ -46,7 +47,7 @@ async fn fill_names_database(pool: &SqlitePool) -> Result<(), String> {
         .map(Actor::from)
         .collect::<Vec<_>>();
 
-    println!("Parsed actors, Preparing transactions");
+    println!("Parsed {} actors, Preparing transactions", actors.len());
 
     let mut tx = pool
         .begin()
