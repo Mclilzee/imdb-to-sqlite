@@ -9,9 +9,19 @@ const ACTORS_TSV_FILE: &str = "name.basics.tsv";
 const DATABASE_NAME: &str = "imdb.db";
 const ACTORS_TABLE_NAME: &str = "actors";
 
-struct Actor<'a> {
+struct Actor {
     id: u32,
-    name: &'a str,
+    name: String,
+}
+
+impl Actor {
+    fn from(line: String) -> Self {
+        let values: Vec<&str> = line.split('\t').collect();
+        let id: u32 = values.first().unwrap()[2..].parse().unwrap();
+        let name = values.get(1).unwrap().to_string();
+
+        Self { id, name }
+    }
 }
 
 #[tokio::main]
@@ -27,35 +37,33 @@ async fn create_tables() -> Result<SqlitePool, String> {
     let pool = SqlitePoolOptions::new()
         .max_connections(5)
         .connect(DATABASE_NAME)
-        .await.map_err(|_| format!("Unable to connect to {DATABASE_NAME}"))?;
+        .await
+        .map_err(|e| format!("Unable to connect to {DATABASE_NAME} -> {e}"))?;
 
-    sqlx::query("CREATE TABLE IF NOT EXISTS {$1} ( id integer primary key, name text not null)")
-        .bind(ACTORS_TABLE_NAME)
+    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {ACTORS_TABLE_NAME} (id integer primary key, name text not null, birth_year integer, death_year integer)").as_str())
         .fetch_one(&pool)
-        .await.map_err(|_| "Unable to create actors table".to_string())?;
+        .await.map_err(|e| format!("Unable to create actors table -> {e}"))?;
 
     Ok(pool)
 }
 
 async fn fill_names_database(pool: &SqlitePool) -> Result<(), String> {
-    let names = File::open(ACTORS_TSV_FILE).map_err(|_| format!("Unable to read from {ACTORS_TSV_FILE}"))?;
+    let names = File::open(ACTORS_TSV_FILE)
+        .map_err(|e| format!("Unable to read from {ACTORS_TSV_FILE} -> {e}"))?;
     let reader = BufReader::new(names);
-    let _ = reader
+    for actor in reader
         .lines()
         .skip(1)
         .map_while(Result::ok)
-        .map(|l| {
-            let values: Vec<&str> = l.split('\t').collect();
-            let id: u32 = values.first().unwrap()[2..].parse().unwrap();
-            let name = values.get(1).unwrap().to_string();
-            sqlx::query("INSERT INTO $1 VALUES($2, '$3')")
-                .bind(ACTORS_TABLE_NAME)
-                .bind(id)
-                .bind(name)
-                .fetch_one(pool)
-        })
-        .collect::<Vec<_>>();
-
+        .map(Actor::from)
+    {
+        sqlx::query("INSERT INTO $1 VALUES($2, $3)")
+            .bind(ACTORS_TABLE_NAME)
+            .bind(actor.id)
+            .bind(&actor.name)
+            .fetch_one(pool)
+            .await.unwrap();
+    }
 
     Ok(())
 }
