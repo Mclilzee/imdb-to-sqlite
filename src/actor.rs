@@ -41,7 +41,6 @@ impl Actor {
     }
 }
 
-
 pub fn get_actors() -> Result<Vec<Actor>, String> {
     let names = File::open(ACTORS_TSV_FILE)
         .map_err(|e| format!("Unable to read from {ACTORS_TSV_FILE} -> {e}"))?;
