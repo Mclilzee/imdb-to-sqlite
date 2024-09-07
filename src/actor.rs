@@ -45,19 +45,12 @@ impl Actor {
 pub fn get_actors() -> Result<Vec<Actor>, String> {
     let names = File::open(ACTORS_TSV_FILE)
         .map_err(|e| format!("Unable to read from {ACTORS_TSV_FILE} -> {e}"))?;
-    let reader = BufReader::new(names);
-    
-    let mut actors = Vec::new();
-    for l in reader
+
+    BufReader::new(names)
         .lines()
         .skip(1)
-        .map(|l| l.map_err(|e| format!("Unable to read line -> {e}"))) {
-
-        let line = l?;
-        let actor = Actor::from(line)?;
-        actors.push(actor);
-    }
-
-    Ok(actors)
+        .map(|l| l.map_err(|e| format!("Unable to read line -> {e}")))
+        .map(|l| l.and_then(Actor::from))
+        .collect()
 }
 
