@@ -3,6 +3,7 @@ mod title;
 
 use actor::{get_actors, Actor};
 use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
+use title::get_titles;
 
 const MAX_CONNECTIONS: u32 = 10;
 const DATABASE_NAME: &str = "imdb.db";
@@ -14,6 +15,9 @@ const ACTOR_TITLES_TABLE_NAME: &str = "actor_title";
 async fn main() -> Result<(), String> {
     let pool = create_tables().await?;
     let actors = get_actors()?;
+    let titles = get_titles()?;
+
+    titles.iter().for_each(|t| println!("{t:?}"));
     fill_actor_table(&pool, &actors).await?;
     fill_actor_role_table(&pool, &actors).await?;
     fill_actor_title_table(&pool, &actors).await?;
