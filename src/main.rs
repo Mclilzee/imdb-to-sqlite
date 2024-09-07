@@ -34,7 +34,7 @@ async fn create_tables() -> Result<SqlitePool, String> {
     sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {ACTOR_PROFESSION_TABLE_NAME} (actor_id integer not null, profession text not null, foreign key(actor_id) references actor(id))").as_str())
         .execute(&pool)
         .await.map_err(|e| format!("Unable to create actors table -> {e}"))?;
-    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {ACTOR_TITLES_TABLE_NAME} (actor_id integer not null, title text not null, foreign key(actor_id) references actor(id))").as_str())
+    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {ACTOR_TITLES_TABLE_NAME} (actor_id integer not null, title integer not null, foreign key(actor_id) references actor(id))").as_str())
         .execute(&pool)
         .await.map_err(|e| format!("Unable to create actors table -> {e}"))?;
 
@@ -123,7 +123,7 @@ async fn fill_actor_title_table(pool: &SqlitePool, actors: &[Actor]) -> Result<(
         .await
         .map_err(|e| format!("Failed to start transaction => {e}"))?;
 
-    let query = format!("INSERT INTO {ACTOR_PROFESSION_TABLE_NAME} VALUES($1, $2)");
+    let query = format!("INSERT INTO {ACTOR_TITLES_TABLE_NAME} VALUES($1, $2)");
     let mut percentage: u8 = 0;
     for (i, actor) in actors.iter().enumerate() {
         for title in actor.titles.iter() {
@@ -134,7 +134,7 @@ async fn fill_actor_title_table(pool: &SqlitePool, actors: &[Actor]) -> Result<(
                 .await
                 .map_err(|e| {
                     format!(
-                        "Failed to insert {}, {} into {ACTOR_PROFESSION_TABLE_NAME} => {e}",
+                        "Failed to insert {}, {} into {ACTOR_TITLES_TABLE_NAME} => {e}",
                         actor.id, title
                     )
                 })?;
@@ -153,8 +153,6 @@ async fn fill_actor_title_table(pool: &SqlitePool, actors: &[Actor]) -> Result<(
     tx.commit()
         .await
         .map_err(|e| format!("Failed to commit transactions => {e}"))?;
-    println!("Actors inserted");
-
     Ok(())
 }
 
