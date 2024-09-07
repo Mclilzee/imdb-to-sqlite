@@ -1,21 +1,17 @@
 mod actor;
 
-use actor::Actor;
+use actor::{get_actors, Actor};
 use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
-use std::{
-    fs::File,
-    io::{BufRead, BufReader},
-};
 
-const MAX_CONNECTIONS: u32 = 100;
-const ACTORS_TSV_FILE: &str = "name.basics.tsv";
+const MAX_CONNECTIONS: u32 = 10;
 const DATABASE_NAME: &str = "imdb.db";
 const ACTORS_TABLE_NAME: &str = "actors";
 
 #[tokio::main]
 async fn main() -> Result<(), String> {
     let pool = create_tables().await?;
-    fill_actors_table(&pool).await?;
+    let actors = get_actors()?;
+    fill_actors_table(&pool, &actors).await?;
 
     println!("Finished Converting.");
     Ok(())
@@ -35,20 +31,9 @@ async fn create_tables() -> Result<SqlitePool, String> {
     Ok(pool)
 }
 
-async fn fill_actors_table(pool: &SqlitePool) -> Result<(), String> {
-    println!("Parsing actors.");
-    let names = File::open(ACTORS_TSV_FILE)
-        .map_err(|e| format!("Unable to read from {ACTORS_TSV_FILE} -> {e}"))?;
-    let reader = BufReader::new(names);
-    let actors = reader
-        .lines()
-        .skip(1)
-        .map_while(Result::ok)
-        .map(Actor::from)
-        .collect::<Vec<_>>();
 
-    println!("Parsed {} actors, Preparing transactions", actors.len());
-
+async fn fill_actors_table(pool: &SqlitePool, actors: &[Actor]) -> Result<(), String> {
+    println!("Parsed {} actors, Preparing Actors transactions", actors.len());
     let mut tx = pool
         .begin()
         .await
@@ -65,7 +50,7 @@ async fn fill_actors_table(pool: &SqlitePool) -> Result<(), String> {
             .await
             .map_err(|e| format!("Failed to insert {actor:?} into {ACTORS_TABLE_NAME} => {e}"))?;
 
-        if i % 1000000 == 0 {
+        if i % 100000 == 0 {
             let new_percentage: f32 = (i as f32 / actors.len() as f32) * 100.0;
             let new_percentage = new_percentage as u8;
             if new_percentage > percentage {
@@ -75,10 +60,10 @@ async fn fill_actors_table(pool: &SqlitePool) -> Result<(), String> {
         }
     }
 
-    println!("Started commiting transactions");
     tx.commit()
         .await
         .map_err(|e| format!("Failed to commit transactions => {e}"))?;
+    println!("Actors inserted");
 
     Ok(())
 }
