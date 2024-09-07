@@ -1,4 +1,5 @@
 mod actor;
+mod title;
 
 use actor::{get_actors, Actor};
 use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
