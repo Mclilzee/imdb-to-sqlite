@@ -41,6 +41,7 @@ impl Name {
 }
 
 pub fn get_names() -> Result<Vec<Name>, String> {
+    println!("Parsing {NAMES_TSV_FILE}");
     let names = File::open(NAMES_TSV_FILE)
         .map_err(|e| format!("Unable to read from {NAMES_TSV_FILE} -> {e}"))?;
 

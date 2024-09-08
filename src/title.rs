@@ -40,6 +40,7 @@ impl Title {
 }
 
 pub fn get_titles() -> Result<Vec<Title>, String> {
+    println!("Parsing {TITLE_TSV_FILE}");
     let names = File::open(TITLE_TSV_FILE)
         .map_err(|e| format!("Unable to read from {TITLE_TSV_FILE} -> {e}"))?;
 

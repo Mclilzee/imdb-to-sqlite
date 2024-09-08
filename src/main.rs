@@ -4,12 +4,13 @@ mod title;
 use name::{get_names, Name};
 use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
 use title::{get_titles, Title};
+use tokio::{io::join, try_join};
 
 const MAX_CONNECTIONS: u32 = 10;
 const DATABASE_NAME: &str = "imdb.db";
 const NAME_TABLE_NAME: &str = "name";
 const NAME_PROFESSION_TABLE_NAME: &str = "name_profession";
-const NAME_TITLES_TABLE_NAME: &str = "name_title";
+const NAME_TITLE_TABLE_NAME: &str = "name_title";
 const TITLE_TABLE_NAME: &str = "title";
 
 #[tokio::main]
@@ -22,17 +23,15 @@ async fn main() -> Result<(), String> {
 
     create_tables(&pool).await?;
     {
-        println!("Parsing names lines");
+        let titles = get_titles()?;
+        fill_title_basics_table(&pool, &titles).await?;
+    }
+
+    {
         let names = get_names()?;
         fill_name_table(&pool, &names).await?;
         fill_name_profession_table(&pool, &names).await?;
         fill_name_title_table(&pool, &names).await?;
-    }
-
-    {
-        println!("Parsing title lines");
-        let titles = get_titles()?;
-        fill_title_basics_table(&pool, &titles).await?;
     }
 
     println!("Finished Converting.");
@@ -44,14 +43,16 @@ async fn create_tables(pool: &SqlitePool) -> Result<(), String> {
         .execute(pool)
         .await.map_err(|e| format!("Unable to create names table -> {e}"))?;
 
-    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {NAME_TABLE_NAME} (id integer primary key, name text not null, birth_year integer, death_year integer)").as_str())
-        .execute(pool)
-        .await.map_err(|e| format!("Unable to create names table -> {e}"))?;
-
     sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {NAME_PROFESSION_TABLE_NAME} (name_id integer not null, profession text not null, foreign key(name_id) references name(id))").as_str())
         .execute(pool)
         .await.map_err(|e| format!("Unable to create names table -> {e}"))?;
+
+
     sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {TITLE_TABLE_NAME} (id integer primary key, primary_name text not null, original_name text not null, title_type text not null, release_date integer, end_date integer)").as_str())
+        .execute(pool)
+        .await.map_err(|e| format!("Unable to create names table -> {e}"))?;
+
+    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {NAME_TITLE_TABLE_NAME} (name_id integer not null, title_id integer not null, foreign key(name_id) references name(id))").as_str())
         .execute(pool)
         .await.map_err(|e| format!("Unable to create names table -> {e}"))?;
 
@@ -137,7 +138,7 @@ async fn fill_name_title_table(pool: &SqlitePool, names: &[Name]) -> Result<(), 
         .map_err(|e| format!("Failed to start transaction => {e}"))?;
 
     println!("-- Name Title Table Progress --");
-    let query = format!("INSERT INTO {NAME_TITLES_TABLE_NAME} VALUES($1, $2)");
+    let query = format!("INSERT INTO {NAME_TITLE_TABLE_NAME} VALUES($1, $2)");
     for (i, name) in names.iter().enumerate() {
         for title in name.titles.iter() {
             sqlx::query(&query)
@@ -147,7 +148,7 @@ async fn fill_name_title_table(pool: &SqlitePool, names: &[Name]) -> Result<(), 
                 .await
                 .map_err(|e| {
                     format!(
-                        "Failed to insert {}, {} into {NAME_TITLES_TABLE_NAME} => {e}",
+                        "Failed to insert {}, {} into {NAME_TITLE_TABLE_NAME} => {e}",
                         name.id, title
                     )
                 })?;
@@ -208,10 +209,9 @@ async fn fill_title_basics_table(pool: &SqlitePool, titles: &[Title]) -> Result<
 }
 
 fn print_insertion_percentage(index: usize, size: usize) {
-    let n: u8 = ((index as f32 / size as f32) * 100.0) as u8;
-    assert!((0..=100).contains(&n));
+    let n: u8 = ((index as f32 / size as f32) * 100.0 + 2.0) as u8;
     print!("\r[");
-    for i in 0..=100 {
+    for i in 0..=101 {
         if i <= n {
             print!("#");
         } else {
@@ -219,5 +219,5 @@ fn print_insertion_percentage(index: usize, size: usize) {
         }
     }
 
-    print!("] {n}%");
+    print!("] {:02}%", u8::min(n, 100));
 }
