@@ -60,15 +60,15 @@ impl Genre {
                 .collect::<Vec<Genre>>()
         });
 
-        return genre.ok_or(format!("Failed to extract genre for {title_id}"));
+        genre.ok_or(format!("Failed to extract genre for {title_id}"))
     }
 }
 
 pub async fn parse_title_basics_tsv(conn: &mut SqliteConnection) -> Result<(), String> {
     println!("Creating {TITLE_TABLE_NAME} Table...");
-
     create_tables(conn).await?;
-
+    insert_titles(conn).await?;
+    insert_genres(conn).await?;
     Ok(())
 }
 
@@ -89,23 +89,22 @@ async fn create_tables(conn: &mut SqliteConnection) -> Result<(), String> {
     tx.commit()
         .await
         .map_err(|e| format!("Failed to commit transactions => {e}"))?;
-
     Ok(())
 }
 
 async fn insert_titles(conn: &mut SqliteConnection) -> Result<(), String> {
     println!("-- Creating {TITLE_TABLE_NAME} --");
-    let names = File::open(TITLE_TSV_FILE)
+    let file1 = File::open(TITLE_TSV_FILE)
         .map_err(|e| format!("Unable to read from {TITLE_TSV_FILE} -> {e}"))?;
-    let mut reader = BufReader::new(names);
-    let count = (&mut reader).lines().skip(1).count();
+    let file2 = file1.try_clone().map_err(|e| format!("Failed to clone file {file1:?} => {e}"))?;
 
+    let count = BufReader::new(file1).lines().skip(1).count();
     let mut tx = conn
         .begin()
         .await
         .map_err(|e| format!("Failed to start transaction => {e}"))?;
 
-    for (i, title) in reader
+    for (i, title) in BufReader::new(file2)
         .lines()
         .skip(1)
         .map(|l| l.map_err(|e| format!("Unable to read line -> {e}")))
@@ -148,17 +147,17 @@ async fn insert_titles(conn: &mut SqliteConnection) -> Result<(), String> {
 
 async fn insert_genres(conn: &mut SqliteConnection) -> Result<(), String> {
     println!("-- Creating {GENRE_TABLE_NAME} --");
-    let names = File::open(TITLE_TSV_FILE)
+    let file1 = File::open(TITLE_TSV_FILE)
         .map_err(|e| format!("Unable to read from {TITLE_TSV_FILE} -> {e}"))?;
-    let mut reader = BufReader::new(names);
-    let count = (&mut reader).lines().skip(1).count();
+    let file2 = file1.try_clone().map_err(|e| format!("Failed to clone file {file1:?} => {e}"))?;
 
     let mut tx = conn
         .begin()
         .await
         .map_err(|e| format!("Failed to start transaction => {e}"))?;
 
-    for (i, genres) in reader
+    let count = BufReader::new(file1).lines().skip(1).count();
+    for (i, genres) in BufReader::new(file2)
         .lines()
         .skip(1)
         .map(|l| l.map_err(|e| format!("Unable to read line -> {e}")))
