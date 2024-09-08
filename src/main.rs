@@ -4,9 +4,9 @@ mod title;
 use name::{get_names, Name};
 use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
 use title::{get_titles, Title};
-use tokio::{io::join, try_join};
+use tokio::try_join;
 
-const MAX_CONNECTIONS: u32 = 10;
+const MAX_CONNECTIONS: u32 = 2;
 const DATABASE_NAME: &str = "imdb.db";
 const NAME_TABLE_NAME: &str = "name";
 const NAME_PROFESSION_TABLE_NAME: &str = "name_profession";
@@ -80,9 +80,7 @@ async fn fill_name_table(pool: &SqlitePool, names: &[Name]) -> Result<(), String
                 )
             })?;
 
-        if i % 100000 == 0 {
-            print_insertion_percentage(i, names.len());
-        }
+        print_insertion_percentage(i, names.len());
     }
     println!();
 
@@ -117,9 +115,7 @@ async fn fill_name_profession_table(pool: &SqlitePool, names: &[Name]) -> Result
                 })?;
         }
 
-        if i % 100000 == 0 {
-            print_insertion_percentage(i, names.len());
-        }
+        print_insertion_percentage(i, names.len());
     }
     println!();
 
@@ -145,17 +141,9 @@ async fn fill_name_title_table(pool: &SqlitePool, names: &[Name]) -> Result<(), 
                 .bind(title)
                 .execute(&mut *tx)
                 .await
-                .map_err(|e| {
-                    format!(
-                        "Failed to insert {}, {} into {NAME_TITLE_TABLE_NAME} => {e}",
-                        name.id, title
-                    )
-                })?;
+                .ok();
         }
-
-        if i % 100000 == 0 {
-            print_insertion_percentage(i, names.len());
-        }
+        print_insertion_percentage(i, names.len());
     }
     println!();
 
@@ -194,10 +182,7 @@ async fn fill_title_basics_table(pool: &SqlitePool, titles: &[Title]) -> Result<
                     title.end_date
                 )
             })?;
-
-        if i % 100000 == 0 {
-            print_insertion_percentage(i, titles.len());
-        }
+        print_insertion_percentage(i, titles.len());
     }
     println!();
 
@@ -208,6 +193,10 @@ async fn fill_title_basics_table(pool: &SqlitePool, titles: &[Title]) -> Result<
 }
 
 fn print_insertion_percentage(index: usize, size: usize) {
+    if index % 100000 != 0 {
+        return;
+    }
+
     let n = index as f32 / size as f32 * 100.0 + 2.0;
     let n = n as u8;
     print!("\r[");
@@ -215,7 +204,7 @@ fn print_insertion_percentage(index: usize, size: usize) {
         print!("#");
     }
 
-    for _ in n..102 {
+    for _ in n..101 {
         print!("-");
     }
 
