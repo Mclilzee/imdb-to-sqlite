@@ -22,6 +22,7 @@ async fn main() -> Result<(), String> {
 
     create_tables(&pool).await?;
     {
+        println!("Parsing actors lines");
         let actors = get_actors()?;
         fill_actor_table(&pool, &actors).await?;
         fill_actor_role_table(&pool, &actors).await?;
@@ -29,6 +30,7 @@ async fn main() -> Result<(), String> {
     }
 
     {
+        println!("Parsing title lines");
         let titles = get_titles()?;
         fill_title_basics_table(&pool, &titles).await?;
     }
@@ -62,7 +64,7 @@ async fn fill_actor_table(pool: &SqlitePool, actors: &[Actor]) -> Result<(), Str
         .await
         .map_err(|e| format!("Failed to start transaction => {e}"))?;
     let query = format!("INSERT INTO {ACTOR_TABLE_NAME} VALUES($1, $2, $3, $4)");
-    let mut percentage: u8 = 0;
+    println!("-- {ACTOR_TABLE_NAME} --");
     for (i, actor) in actors.iter().enumerate() {
         sqlx::query(&query)
             .bind(actor.id)
@@ -71,17 +73,18 @@ async fn fill_actor_table(pool: &SqlitePool, actors: &[Actor]) -> Result<(), Str
             .bind(actor.death_date)
             .execute(&mut *tx)
             .await
-            .map_err(|e| format!("Failed to insert {actor:?} into {ACTOR_TABLE_NAME} => {e}"))?;
+            .map_err(|e| {
+                format!(
+                    "Failed to insert {}, {}, {:?}, {:?} into {ACTOR_TABLE_NAME} => {e}",
+                    actor.id, actor.name, actor.birth_date, actor.death_date
+                )
+            })?;
 
         if i % 100000 == 0 {
-            let new_percentage: f32 = (i as f32 / actors.len() as f32) * 100.0;
-            let new_percentage = new_percentage as u8;
-            if new_percentage > percentage {
-                percentage = new_percentage;
-                print_insertion_percentage(percentage, ACTOR_TABLE_NAME);
-            }
+            print_insertion_percentage(i, actors.len());
         }
     }
+    println!();
 
     tx.commit()
         .await
@@ -115,19 +118,14 @@ async fn fill_actor_role_table(pool: &SqlitePool, actors: &[Actor]) -> Result<()
         }
 
         if i % 100000 == 0 {
-            let new_percentage: f32 = (i as f32 / actors.len() as f32) * 100.0;
-            let new_percentage = new_percentage as u8;
-            if new_percentage > percentage {
-                percentage = new_percentage;
-                print_insertion_percentage(percentage, ACTOR_PROFESSION_TABLE_NAME);
-            }
+            print_insertion_percentage(i, actors.len());
         }
     }
+    println!();
 
     tx.commit()
         .await
         .map_err(|e| format!("Failed to commit transactions => {e}"))?;
-    println!("Actors inserted");
 
     Ok(())
 }
@@ -139,7 +137,6 @@ async fn fill_actor_title_table(pool: &SqlitePool, actors: &[Actor]) -> Result<(
         .map_err(|e| format!("Failed to start transaction => {e}"))?;
 
     let query = format!("INSERT INTO {ACTOR_TITLES_TABLE_NAME} VALUES($1, $2)");
-    let mut percentage: u8 = 0;
     for (i, actor) in actors.iter().enumerate() {
         for title in actor.titles.iter() {
             sqlx::query(&query)
@@ -156,14 +153,10 @@ async fn fill_actor_title_table(pool: &SqlitePool, actors: &[Actor]) -> Result<(
         }
 
         if i % 100000 == 0 {
-            let new_percentage: f32 = (i as f32 / actors.len() as f32) * 100.0;
-            let new_percentage = new_percentage as u8;
-            if new_percentage > percentage {
-                percentage = new_percentage;
-                print_insertion_percentage(percentage, ACTOR_TITLES_TABLE_NAME);
-            }
+            print_insertion_percentage(i, actors.len());
         }
     }
+    println!();
 
     tx.commit()
         .await
@@ -177,7 +170,7 @@ async fn fill_title_basics_table(pool: &SqlitePool, titles: &[Title]) -> Result<
         .await
         .map_err(|e| format!("Failed to start transaction => {e}"))?;
 
-    let query = format!("INSERT INTO {TITLE_TABLE_NAME} VALUES($1, $2, $3, $4, $5)");
+    let query = format!("INSERT INTO {TITLE_TABLE_NAME} VALUES($1, $2, $3, $4, $5, $6)");
     for (i, title) in titles.iter().enumerate() {
         sqlx::query(&query)
             .bind(title.id)
@@ -201,10 +194,10 @@ async fn fill_title_basics_table(pool: &SqlitePool, titles: &[Title]) -> Result<
             })?;
 
         if i % 100000 == 0 {
-            let percentage: f32 = (i as f32 / titles.len() as f32) * 100.0;
-            print_insertion_percentage(percentage as u8, TITLE_TABLE_NAME);
+            print_insertion_percentage(i, titles.len());
         }
     }
+    println!();
 
     tx.commit()
         .await
@@ -212,10 +205,10 @@ async fn fill_title_basics_table(pool: &SqlitePool, titles: &[Title]) -> Result<
     Ok(())
 }
 
-fn print_insertion_percentage(n: u8, table_name: &str) {
+fn print_insertion_percentage(index: usize, size: usize) {
+    let n: u8 = ((index as f32 / size as f32) * 100.0) as u8;
     assert!((0..=100).contains(&n));
-    println!("-- Table {table_name} --");
-    print!("[");
+    print!("\r[");
     for i in 0..=100 {
         if i <= n {
             print!("#");
@@ -224,5 +217,5 @@ fn print_insertion_percentage(n: u8, table_name: &str) {
         }
     }
 
-    println!("] {n}%");
+    print!("] {n}%");
 }
