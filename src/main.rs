@@ -1,15 +1,15 @@
-mod actor;
+mod name;
 mod title;
 
-use actor::{get_actors, Actor};
+use name::{get_names, Name};
 use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
 use title::{get_titles, Title};
 
 const MAX_CONNECTIONS: u32 = 10;
 const DATABASE_NAME: &str = "imdb.db";
-const ACTOR_TABLE_NAME: &str = "actor";
-const ACTOR_PROFESSION_TABLE_NAME: &str = "actor_profession";
-const ACTOR_TITLES_TABLE_NAME: &str = "actor_title";
+const NAME_TABLE_NAME: &str = "name";
+const NAME_PROFESSION_TABLE_NAME: &str = "name_profession";
+const NAME_TITLES_TABLE_NAME: &str = "name_title";
 const TITLE_TABLE_NAME: &str = "title";
 
 #[tokio::main]
@@ -22,11 +22,11 @@ async fn main() -> Result<(), String> {
 
     create_tables(&pool).await?;
     {
-        println!("Parsing actors lines");
-        let actors = get_actors()?;
-        fill_actor_table(&pool, &actors).await?;
-        fill_actor_role_table(&pool, &actors).await?;
-        fill_actor_title_table(&pool, &actors).await?;
+        println!("Parsing names lines");
+        let names = get_names()?;
+        fill_name_table(&pool, &names).await?;
+        fill_name_profession_table(&pool, &names).await?;
+        fill_name_title_table(&pool, &names).await?;
     }
 
     {
@@ -40,48 +40,48 @@ async fn main() -> Result<(), String> {
 }
 
 async fn create_tables(pool: &SqlitePool) -> Result<(), String> {
-    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {ACTOR_TABLE_NAME} (id integer primary key, name text not null, birth_year integer, death_year integer)").as_str())
+    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {NAME_TABLE_NAME} (id integer primary key, name text not null, birth_year integer, death_year integer)").as_str())
         .execute(pool)
-        .await.map_err(|e| format!("Unable to create actors table -> {e}"))?;
+        .await.map_err(|e| format!("Unable to create names table -> {e}"))?;
 
-    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {ACTOR_TABLE_NAME} (id integer primary key, name text not null, birth_year integer, death_year integer)").as_str())
+    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {NAME_TABLE_NAME} (id integer primary key, name text not null, birth_year integer, death_year integer)").as_str())
         .execute(pool)
-        .await.map_err(|e| format!("Unable to create actors table -> {e}"))?;
+        .await.map_err(|e| format!("Unable to create names table -> {e}"))?;
 
-    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {ACTOR_PROFESSION_TABLE_NAME} (actor_id integer not null, profession text not null, foreign key(actor_id) references actor(id))").as_str())
+    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {NAME_PROFESSION_TABLE_NAME} (name_id integer not null, profession text not null, foreign key(name_id) references name(id))").as_str())
         .execute(pool)
-        .await.map_err(|e| format!("Unable to create actors table -> {e}"))?;
+        .await.map_err(|e| format!("Unable to create names table -> {e}"))?;
     sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {TITLE_TABLE_NAME} (id integer primary key, primary_name text not null, original_name text not null, title_type text not null, release_date integer, end_date integer)").as_str())
         .execute(pool)
-        .await.map_err(|e| format!("Unable to create actors table -> {e}"))?;
+        .await.map_err(|e| format!("Unable to create names table -> {e}"))?;
 
     Ok(())
 }
 
-async fn fill_actor_table(pool: &SqlitePool, actors: &[Actor]) -> Result<(), String> {
+async fn fill_name_table(pool: &SqlitePool, names: &[Name]) -> Result<(), String> {
     let mut tx = pool
         .begin()
         .await
         .map_err(|e| format!("Failed to start transaction => {e}"))?;
-    let query = format!("INSERT INTO {ACTOR_TABLE_NAME} VALUES($1, $2, $3, $4)");
-    println!("-- {ACTOR_TABLE_NAME} --");
-    for (i, actor) in actors.iter().enumerate() {
+    let query = format!("INSERT INTO {NAME_TABLE_NAME} VALUES($1, $2, $3, $4)");
+    println!("-- Name Table Progress --");
+    for (i, name) in names.iter().enumerate() {
         sqlx::query(&query)
-            .bind(actor.id)
-            .bind(&actor.name)
-            .bind(actor.birth_date)
-            .bind(actor.death_date)
+            .bind(name.id)
+            .bind(&name.name)
+            .bind(name.birth_date)
+            .bind(name.death_date)
             .execute(&mut *tx)
             .await
             .map_err(|e| {
                 format!(
-                    "Failed to insert {}, {}, {:?}, {:?} into {ACTOR_TABLE_NAME} => {e}",
-                    actor.id, actor.name, actor.birth_date, actor.death_date
+                    "Failed to insert {}, {}, {:?}, {:?} into {NAME_TABLE_NAME} => {e}",
+                    name.id, name.name, name.birth_date, name.death_date
                 )
             })?;
 
         if i % 100000 == 0 {
-            print_insertion_percentage(i, actors.len());
+            print_insertion_percentage(i, names.len());
         }
     }
     println!();
@@ -89,35 +89,36 @@ async fn fill_actor_table(pool: &SqlitePool, actors: &[Actor]) -> Result<(), Str
     tx.commit()
         .await
         .map_err(|e| format!("Failed to commit transactions => {e}"))?;
-    println!("Actors inserted");
+    println!("Names inserted");
 
     Ok(())
 }
 
-async fn fill_actor_role_table(pool: &SqlitePool, actors: &[Actor]) -> Result<(), String> {
+async fn fill_name_profession_table(pool: &SqlitePool, names: &[Name]) -> Result<(), String> {
     let mut tx = pool
         .begin()
         .await
         .map_err(|e| format!("Failed to start transaction => {e}"))?;
 
-    let query = format!("INSERT INTO {ACTOR_PROFESSION_TABLE_NAME} VALUES($1, $2)");
-    for (i, actor) in actors.iter().enumerate() {
-        for profession in actor.professions.iter() {
+    println!("-- Name Profession Table Progress --");
+    let query = format!("INSERT INTO {NAME_PROFESSION_TABLE_NAME} VALUES($1, $2)");
+    for (i, name) in names.iter().enumerate() {
+        for profession in name.professions.iter() {
             sqlx::query(&query)
-                .bind(actor.id)
+                .bind(name.id)
                 .bind(profession)
                 .execute(&mut *tx)
                 .await
                 .map_err(|e| {
                     format!(
-                        "Failed to insert {}, {} into {ACTOR_PROFESSION_TABLE_NAME} => {e}",
-                        actor.id, profession
+                        "Failed to insert {}, {} into {NAME_PROFESSION_TABLE_NAME} => {e}",
+                        name.id, profession
                     )
                 })?;
         }
 
         if i % 100000 == 0 {
-            print_insertion_percentage(i, actors.len());
+            print_insertion_percentage(i, names.len());
         }
     }
     println!();
@@ -129,30 +130,31 @@ async fn fill_actor_role_table(pool: &SqlitePool, actors: &[Actor]) -> Result<()
     Ok(())
 }
 
-async fn fill_actor_title_table(pool: &SqlitePool, actors: &[Actor]) -> Result<(), String> {
+async fn fill_name_title_table(pool: &SqlitePool, names: &[Name]) -> Result<(), String> {
     let mut tx = pool
         .begin()
         .await
         .map_err(|e| format!("Failed to start transaction => {e}"))?;
 
-    let query = format!("INSERT INTO {ACTOR_TITLES_TABLE_NAME} VALUES($1, $2)");
-    for (i, actor) in actors.iter().enumerate() {
-        for title in actor.titles.iter() {
+    println!("-- Name Title Table Progress --");
+    let query = format!("INSERT INTO {NAME_TITLES_TABLE_NAME} VALUES($1, $2)");
+    for (i, name) in names.iter().enumerate() {
+        for title in name.titles.iter() {
             sqlx::query(&query)
-                .bind(actor.id)
+                .bind(name.id)
                 .bind(title)
                 .execute(&mut *tx)
                 .await
                 .map_err(|e| {
                     format!(
-                        "Failed to insert {}, {} into {ACTOR_TITLES_TABLE_NAME} => {e}",
-                        actor.id, title
+                        "Failed to insert {}, {} into {NAME_TITLES_TABLE_NAME} => {e}",
+                        name.id, title
                     )
                 })?;
         }
 
         if i % 100000 == 0 {
-            print_insertion_percentage(i, actors.len());
+            print_insertion_percentage(i, names.len());
         }
     }
     println!();
@@ -169,6 +171,7 @@ async fn fill_title_basics_table(pool: &SqlitePool, titles: &[Title]) -> Result<
         .await
         .map_err(|e| format!("Failed to start transaction => {e}"))?;
 
+    println!("-- Title Table Progress --");
     let query = format!("INSERT INTO {TITLE_TABLE_NAME} VALUES($1, $2, $3, $4, $5, $6)");
     for (i, title) in titles.iter().enumerate() {
         sqlx::query(&query)

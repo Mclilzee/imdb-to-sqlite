@@ -1,8 +1,8 @@
 use std::{fs::File, io::{BufRead, BufReader}};
 
-const ACTORS_TSV_FILE: &str = "name.basics.tsv";
+const NAMES_TSV_FILE: &str = "name.basics.tsv";
 
-pub struct Actor {
+pub struct Name {
     pub id: u32,
     pub name: String,
     pub birth_date: Option<u16>,
@@ -11,7 +11,7 @@ pub struct Actor {
     pub titles: Vec<u32>,
 }
 
-impl Actor {
+impl Name {
     fn from(line: String) -> Result<Self, String> {
         let values: Vec<&str> = line.split('\t').collect();
         let id: u32 = values.first().unwrap()[2..].parse().unwrap();
@@ -40,15 +40,15 @@ impl Actor {
     }
 }
 
-pub fn get_actors() -> Result<Vec<Actor>, String> {
-    let names = File::open(ACTORS_TSV_FILE)
-        .map_err(|e| format!("Unable to read from {ACTORS_TSV_FILE} -> {e}"))?;
+pub fn get_names() -> Result<Vec<Name>, String> {
+    let names = File::open(NAMES_TSV_FILE)
+        .map_err(|e| format!("Unable to read from {NAMES_TSV_FILE} -> {e}"))?;
 
     BufReader::new(names)
         .lines()
         .skip(1)
         .map(|l| l.map_err(|e| format!("Unable to read line -> {e}")))
-        .map(|l| l.and_then(Actor::from))
+        .map(|l| l.and_then(Name::from))
         .collect()
 }
 
