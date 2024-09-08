@@ -13,7 +13,13 @@ const ACTOR_TITLES_TABLE_NAME: &str = "actor_title";
 
 #[tokio::main]
 async fn main() -> Result<(), String> {
-    let pool = create_tables().await?;
+    let pool = SqlitePoolOptions::new()
+        .max_connections(MAX_CONNECTIONS)
+        .connect(DATABASE_NAME)
+        .await
+        .map_err(|e| format!("Unable to connect to {DATABASE_NAME} -> {e}"))?;
+
+    create_tables(&pool).await?;
     let actors = get_actors()?;
     let titles = get_titles()?;
 
@@ -26,24 +32,26 @@ async fn main() -> Result<(), String> {
     Ok(())
 }
 
-async fn create_tables() -> Result<SqlitePool, String> {
-    let pool = SqlitePoolOptions::new()
-        .max_connections(MAX_CONNECTIONS)
-        .connect(DATABASE_NAME)
-        .await
-        .map_err(|e| format!("Unable to connect to {DATABASE_NAME} -> {e}"))?;
+async fn create_tables(pool: &SqlitePool) -> Result<(), String> {
 
     sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {ACTOR_TABLE_NAME} (id integer primary key, name text not null, birth_year integer, death_year integer)").as_str())
-        .execute(&pool)
-        .await.map_err(|e| format!("Unable to create actors table -> {e}"))?;
-    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {ACTOR_PROFESSION_TABLE_NAME} (actor_id integer not null, profession text not null, foreign key(actor_id) references actor(id))").as_str())
-        .execute(&pool)
-        .await.map_err(|e| format!("Unable to create actors table -> {e}"))?;
-    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {ACTOR_TITLES_TABLE_NAME} (actor_id integer not null, title integer not null, foreign key(actor_id) references actor(id))").as_str())
-        .execute(&pool)
+        .execute(pool)
         .await.map_err(|e| format!("Unable to create actors table -> {e}"))?;
 
-    Ok(pool)
+    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {ACTOR_TABLE_NAME} (id integer primary key, name text not null, birth_year integer, death_year integer)").as_str())
+        .execute(pool)
+        .await.map_err(|e| format!("Unable to create actors table -> {e}"))?;
+
+    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {ACTOR_PROFESSION_TABLE_NAME} (actor_id integer not null, profession text not null, foreign key(actor_id) references actor(id))").as_str())
+        .execute(pool)
+        .await.map_err(|e| format!("Unable to create actors table -> {e}"))?;
+
+    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {ACTOR_TITLES_TABLE_NAME} (actor_id integer not null, title integer not null, foreign key(actor_id) references actor(id))").as_str())
+        .execute(pool)
+        .await.map_err(|e| format!("Unable to create actors table -> {e}"))?;
+
+
+    Ok(())
 }
 
 async fn fill_actor_table(pool: &SqlitePool, actors: &[Actor]) -> Result<(), String> {
