@@ -3,13 +3,14 @@ mod title;
 
 use actor::{get_actors, Actor};
 use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
-use title::get_titles;
+use title::{get_titles, Title};
 
 const MAX_CONNECTIONS: u32 = 10;
 const DATABASE_NAME: &str = "imdb.db";
 const ACTOR_TABLE_NAME: &str = "actor";
 const ACTOR_PROFESSION_TABLE_NAME: &str = "actor_profession";
 const ACTOR_TITLES_TABLE_NAME: &str = "actor_title";
+const TITLE_TABLE_NAME: &str = "title";
 
 #[tokio::main]
 async fn main() -> Result<(), String> {
@@ -20,20 +21,23 @@ async fn main() -> Result<(), String> {
         .map_err(|e| format!("Unable to connect to {DATABASE_NAME} -> {e}"))?;
 
     create_tables(&pool).await?;
-    let actors = get_actors()?;
-    let titles = get_titles()?;
+    {
+        let actors = get_actors()?;
+        fill_actor_table(&pool, &actors).await?;
+        fill_actor_role_table(&pool, &actors).await?;
+        fill_actor_title_table(&pool, &actors).await?;
+    }
 
-    titles.iter().for_each(|t| println!("{t:?}"));
-    fill_actor_table(&pool, &actors).await?;
-    fill_actor_role_table(&pool, &actors).await?;
-    fill_actor_title_table(&pool, &actors).await?;
+    {
+        let titles = get_titles()?;
+        fill_title_basics_table(&pool, &titles).await?;
+    }
 
     println!("Finished Converting.");
     Ok(())
 }
 
 async fn create_tables(pool: &SqlitePool) -> Result<(), String> {
-
     sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {ACTOR_TABLE_NAME} (id integer primary key, name text not null, birth_year integer, death_year integer)").as_str())
         .execute(pool)
         .await.map_err(|e| format!("Unable to create actors table -> {e}"))?;
@@ -45,11 +49,9 @@ async fn create_tables(pool: &SqlitePool) -> Result<(), String> {
     sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {ACTOR_PROFESSION_TABLE_NAME} (actor_id integer not null, profession text not null, foreign key(actor_id) references actor(id))").as_str())
         .execute(pool)
         .await.map_err(|e| format!("Unable to create actors table -> {e}"))?;
-
-    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {ACTOR_TITLES_TABLE_NAME} (actor_id integer not null, title integer not null, foreign key(actor_id) references actor(id))").as_str())
+    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {TITLE_TABLE_NAME} (id integer primary key, primary_name text not null, original_name text not null, title_type text not null, release_date integer, end_date integer)").as_str())
         .execute(pool)
         .await.map_err(|e| format!("Unable to create actors table -> {e}"))?;
-
 
     Ok(())
 }
@@ -169,9 +171,49 @@ async fn fill_actor_title_table(pool: &SqlitePool, actors: &[Actor]) -> Result<(
     Ok(())
 }
 
+async fn fill_title_basics_table(pool: &SqlitePool, titles: &[Title]) -> Result<(), String> {
+    let mut tx = pool
+        .begin()
+        .await
+        .map_err(|e| format!("Failed to start transaction => {e}"))?;
+
+    let query = format!("INSERT INTO {TITLE_TABLE_NAME} VALUES($1, $2, $3, $4, $5)");
+    for (i, title) in titles.iter().enumerate() {
+        sqlx::query(&query)
+            .bind(title.id)
+            .bind(&title.primary_name)
+            .bind(&title.original_name)
+            .bind(&title.title_type)
+            .bind(title.release_date)
+            .bind(title.end_date)
+            .execute(&mut *tx)
+            .await
+            .map_err(|e| {
+                format!(
+                    "Failed to insert {}, {}, {}, {}, {:?}, {:?} into {TITLE_TABLE_NAME} => {e}",
+                    title.id,
+                    title.primary_name,
+                    title.original_name,
+                    title.title_type,
+                    title.release_date,
+                    title.end_date
+                )
+            })?;
+
+        if i % 100000 == 0 {
+            let percentage: f32 = (i as f32 / titles.len() as f32) * 100.0;
+            print_insertion_percentage(percentage as u8, TITLE_TABLE_NAME);
+        }
+    }
+
+    tx.commit()
+        .await
+        .map_err(|e| format!("Failed to commit transactions => {e}"))?;
+    Ok(())
+}
+
 fn print_insertion_percentage(n: u8, table_name: &str) {
     assert!((0..=100).contains(&n));
-
     println!("-- Table {table_name} --");
     print!("[");
     for i in 0..=100 {
