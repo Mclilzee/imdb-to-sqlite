@@ -47,12 +47,11 @@ async fn create_tables(pool: &SqlitePool) -> Result<(), String> {
         .execute(pool)
         .await.map_err(|e| format!("Unable to create names table -> {e}"))?;
 
-
     sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {TITLE_TABLE_NAME} (id integer primary key, primary_name text not null, original_name text not null, title_type text not null, release_date integer, end_date integer)").as_str())
         .execute(pool)
         .await.map_err(|e| format!("Unable to create names table -> {e}"))?;
 
-    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {NAME_TITLE_TABLE_NAME} (name_id integer not null, title_id integer not null, foreign key(name_id) references name(id))").as_str())
+    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {NAME_TITLE_TABLE_NAME} (name_id integer not null, title_id integer not null, foreign key(name_id) references name(id), foreign key(title_id) references title(id))").as_str())
         .execute(pool)
         .await.map_err(|e| format!("Unable to create names table -> {e}"))?;
 
@@ -209,14 +208,15 @@ async fn fill_title_basics_table(pool: &SqlitePool, titles: &[Title]) -> Result<
 }
 
 fn print_insertion_percentage(index: usize, size: usize) {
-    let n: u8 = ((index as f32 / size as f32) * 100.0 + 2.0) as u8;
+    let n = index as f32 / size as f32 * 100.0 + 2.0;
+    let n = n as u8;
     print!("\r[");
-    for i in 0..=101 {
-        if i <= n {
-            print!("#");
-        } else {
-            print!("-");
-        }
+    for _ in 0..n {
+        print!("#");
+    }
+
+    for _ in n..102 {
+        print!("-");
     }
 
     print!("] {:02}%", u8::min(n, 100));
