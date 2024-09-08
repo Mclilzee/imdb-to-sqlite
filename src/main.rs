@@ -63,8 +63,8 @@ async fn fill_name_table(pool: &SqlitePool, names: &[Name]) -> Result<(), String
         .begin()
         .await
         .map_err(|e| format!("Failed to start transaction => {e}"))?;
-    let query = format!("INSERT INTO {NAME_TABLE_NAME} VALUES($1, $2, $3, $4)");
     println!("-- Name Table Progress --");
+    let query = format!("INSERT INTO {NAME_TABLE_NAME} VALUES($1, $2, $3, $4)");
     for (i, name) in names.iter().enumerate() {
         sqlx::query(&query)
             .bind(name.id)
