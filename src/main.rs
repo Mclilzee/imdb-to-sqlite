@@ -5,7 +5,7 @@ use std::{env, fs::File};
 
 use name::{get_names, Name};
 use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
-use title::{parse_title, Title};
+use title::parse_title;
 
 const NAME_TABLE_NAME: &str = "name";
 const NAME_PROFESSION_TABLE_NAME: &str = "name_profession";
