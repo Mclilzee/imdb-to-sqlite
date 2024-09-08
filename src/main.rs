@@ -1,13 +1,12 @@
 mod name;
 mod title;
 
+use std::{env, fs::File, path::{Path, PathBuf}};
+
 use name::{get_names, Name};
 use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
 use title::{get_titles, Title};
-use tokio::try_join;
 
-const MAX_CONNECTIONS: u32 = 2;
-const DATABASE_NAME: &str = "imdb.db";
 const NAME_TABLE_NAME: &str = "name";
 const NAME_PROFESSION_TABLE_NAME: &str = "name_profession";
 const NAME_TITLE_TABLE_NAME: &str = "name_title";
@@ -15,11 +14,13 @@ const TITLE_TABLE_NAME: &str = "title";
 
 #[tokio::main]
 async fn main() -> Result<(), String> {
+    let args = env::args().collect::<Vec<_>>();
+    let path = get_database_path(&args)?;
     let pool = SqlitePoolOptions::new()
-        .max_connections(MAX_CONNECTIONS)
-        .connect(DATABASE_NAME)
+        .max_connections(1)
+        .connect(path)
         .await
-        .map_err(|e| format!("Unable to connect to {DATABASE_NAME} -> {e}"))?;
+        .map_err(|e| format!("Unable to connect to {path} -> {e}"))?;
 
     create_tables(&pool).await?;
     {
@@ -36,6 +37,16 @@ async fn main() -> Result<(), String> {
 
     println!("Finished Converting.");
     Ok(())
+}
+
+fn get_database_path(args: &[String]) -> Result<&str, String> {
+    let path = args.get(1).unwrap();
+    if Path::new(path).exists() {
+    }
+
+    File::create(path).map_err(|e| format!("Failed to create file {path} => {e}"))?;
+
+    Ok(path)
 }
 
 async fn create_tables(pool: &SqlitePool) -> Result<(), String> {
