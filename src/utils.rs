@@ -1,5 +1,5 @@
 pub fn percentage_printer(progress: usize, total: usize) {
-    if progress % 100000 != 0 {
+    if progress % 10000 != 0 {
         return;
     }
 
