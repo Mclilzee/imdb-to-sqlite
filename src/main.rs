@@ -1,11 +1,11 @@
 mod name;
 mod title;
 
-use std::{env, fs::File, path::{Path, PathBuf}};
+use std::{env, fs::File};
 
 use name::{get_names, Name};
 use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
-use title::{get_titles, Title};
+use title::{parse_title, Title};
 
 const NAME_TABLE_NAME: &str = "name";
 const NAME_PROFESSION_TABLE_NAME: &str = "name_profession";
@@ -24,16 +24,15 @@ async fn main() -> Result<(), String> {
 
     create_tables(&pool).await?;
     {
-        let titles = get_titles()?;
-        fill_title_basics_table(&pool, &titles).await?;
+        parse_title(&pool).await?;
     }
 
-    {
-        let names = get_names()?;
-        fill_name_table(&pool, &names).await?;
-        fill_name_profession_table(&pool, &names).await?;
-        fill_name_title_table(&pool, &names).await?;
-    }
+    //{
+    //    let names = get_names()?;
+    //    fill_name_table(&pool, &names).await?;
+    //    fill_name_profession_table(&pool, &names).await?;
+    //    fill_name_title_table(&pool, &names).await?;
+    //}
 
     println!("Finished Converting.");
     Ok(())
@@ -41,11 +40,10 @@ async fn main() -> Result<(), String> {
 
 fn get_database_path(args: &[String]) -> Result<&str, String> {
     let path = args.get(1).unwrap();
-    if Path::new(path).exists() {
-    }
+    //if Path::new(path).exists() {
+    //}
 
     File::create(path).map_err(|e| format!("Failed to create file {path} => {e}"))?;
-
     Ok(path)
 }
 
@@ -193,9 +191,7 @@ async fn fill_title_basics_table(pool: &SqlitePool, titles: &[Title]) -> Result<
                     title.end_date
                 )
             })?;
-        print_insertion_percentage(i, titles.len());
     }
-    println!();
 
     tx.commit()
         .await
