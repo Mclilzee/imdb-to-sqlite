@@ -2,7 +2,6 @@ use std::{fs::File, io::{BufRead, BufReader}};
 
 const ACTORS_TSV_FILE: &str = "name.basics.tsv";
 
-#[derive(Debug)]
 pub struct Actor {
     pub id: u32,
     pub name: String,

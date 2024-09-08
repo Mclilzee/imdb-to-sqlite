@@ -2,7 +2,6 @@ use std::{fs::File, io::{BufRead, BufReader}};
 
 const TITLE_TSV_FILE: &str = "title.basics.tsv";
 
-#[derive(Debug)]
 pub struct Title {
     pub id: u32,
     pub primary_name: String,

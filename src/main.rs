@@ -101,7 +101,6 @@ async fn fill_actor_role_table(pool: &SqlitePool, actors: &[Actor]) -> Result<()
         .map_err(|e| format!("Failed to start transaction => {e}"))?;
 
     let query = format!("INSERT INTO {ACTOR_PROFESSION_TABLE_NAME} VALUES($1, $2)");
-    let mut percentage: u8 = 0;
     for (i, actor) in actors.iter().enumerate() {
         for profession in actor.professions.iter() {
             sqlx::query(&query)
