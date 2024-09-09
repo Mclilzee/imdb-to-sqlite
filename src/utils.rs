@@ -1,6 +1,9 @@
 use std::path::PathBuf;
-
 use sqlx::SqliteConnection;
+
+pub fn print_err(message: String) {
+    println!("{message}");
+}
 
 pub fn percentage_printer(progress: usize, total: usize) {
     if progress % 10000 != 0 {

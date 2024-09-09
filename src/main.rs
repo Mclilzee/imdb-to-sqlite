@@ -1,5 +1,6 @@
 mod name;
 mod title_basics;
+mod title_ratings;
 mod utils;
 
 use std::{env, fs::File};
