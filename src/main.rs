@@ -3,8 +3,6 @@ mod title_basics;
 mod utils;
 
 use std::{env, fs::File};
-
-use name::{get_names, Name};
 use sqlx::{Connection, SqliteConnection};
 
 const NAME_TABLE_NAME: &str = "name";

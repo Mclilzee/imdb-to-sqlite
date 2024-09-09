@@ -18,16 +18,6 @@ impl Name {
         let name = values.get(1).unwrap().to_string();
         let birth_date = values.get(2).and_then(|v| v.parse::<u16>().ok());
         let death_date = values.get(3).and_then(|v| v.parse::<u16>().ok());
-        let professions = values
-            .get(4)
-            .map(|&v| v.split(',').map(|v| v.to_string()).collect::<Vec<_>>())
-            .unwrap();
-
-        let titles = values
-            .get(5)
-            .map(|v| v.split(','))
-            .map(|v| v.flat_map(|n| n[2..].parse::<u32>()).collect::<Vec<_>>())
-            .unwrap();
 
         Ok(Self {
             id,
@@ -37,6 +27,52 @@ impl Name {
             professions,
             titles,
         })
+    }
+}
+
+struct NameProfessions {
+    name_id: u32,
+    professions: Vec<String>,
+}
+
+impl NameProfessions {
+        fn from (line: String) -> Result<Self, String> {
+        let values: Vec<&str> = line.split('\t').collect();
+        let name_id: u32 = values.first().unwrap()[2..].parse().unwrap();
+        let professions = values
+            .get(4)
+            .map(|&v| v.split(',').map(|v| v.to_string()).collect::<Vec<_>>())
+            .unwrap();
+
+        Ok(Self {
+            name_id,
+            professions
+        })
+    }
+}
+
+struct NameTitles {
+    name_id: u32,
+    titles: Vec<u32>
+}
+
+impl NameTitles {
+
+    fn from(line: String) -> Result<Self, String> {
+        let values: Vec<&str> = line.split('\t').collect();
+        let name_id: u32 = values.first().unwrap()[2..].parse().unwrap();
+
+        let titles = values
+            .get(5)
+            .map(|v| v.split(','))
+            .map(|v| v.flat_map(|n| n[2..].parse::<u32>()).collect::<Vec<_>>())
+            .unwrap();
+
+        Ok(Self {
+            name_id,
+            titles
+        })
+
     }
 }
 
