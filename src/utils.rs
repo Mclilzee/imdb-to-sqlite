@@ -20,9 +20,13 @@ pub fn percentage_printer(progress: usize, total: usize) {
     print!("] {:02}%", u8::min(n, 100));
 }
 
+pub fn two_decimal(n: f32) -> f32 {
+    let n = (n * 100.0) as i64;
+    n as f32 / 100.0
+}
+
 pub trait SqliteInserter {
     async fn insert(self, conn: &mut SqliteConnection) -> Result<(), String>;
     async fn create_table(&self, conn: &mut SqliteConnection) -> Result<(), String>;
 }
-
 

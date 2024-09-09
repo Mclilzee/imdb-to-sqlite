@@ -12,7 +12,7 @@ const NAME_TABLE_NAME: &str = "name";
 const NAME_PROFESSION_TABLE_NAME: &str = "name_profession";
 const NAME_TITLE_TABLE_NAME: &str = "name_title";
 const TITLE_RATING_TABLE_NAME: &str = "title_rating";
-const TITLE_RATING_FILE_NAME: &str = "title.rating.tsv";
+const TITLE_RATING_FILE_NAME: &str = "title.ratings.tsv";
 
 #[tokio::main]
 async fn main() -> Result<(), String> {
@@ -22,7 +22,7 @@ async fn main() -> Result<(), String> {
         .await
         .map_err(|e| format!("Unable to connect to {path} -> {e}"))?;
 
-    parse_title_ratings(&mut conn).await.map_err(|e| println!("{e}"));
+    let _ = parse_title_ratings(&mut conn).await.map_err(|e| println!("{e}"));
     title_basics::parse_titles(&mut conn).await?;
 
     //title_basics::parse_genres(&mut conn).await?;

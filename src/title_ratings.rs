@@ -3,7 +3,7 @@ use std::{
     io::{BufRead, BufReader, Seek},
 };
 
-use crate::utils::{percentage_printer, SqliteInserter};
+use crate::utils::{percentage_printer, two_decimal, SqliteInserter};
 use sqlx::{Connection, SqliteConnection};
 
 struct TitleRating {
@@ -19,7 +19,13 @@ impl TitleRating {
             .parse::<u32>()
             .map_err(|e| format!("File line ''{line}'' contains wrong format => {e}"))?;
 
-        let average_rating = values.get(1).unwrap().parse::<f32>().unwrap_or_default();
+        let average_rating = values
+            .get(1)
+            .unwrap()
+            .parse::<f32>()
+            .map(two_decimal)
+            .unwrap_or_default();
+
         let votes = values.get(2).unwrap().parse::<u32>().unwrap_or_default();
 
         Ok(Self {
