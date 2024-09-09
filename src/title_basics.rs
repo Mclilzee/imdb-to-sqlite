@@ -41,26 +41,24 @@ impl Title {
     }
 }
 
-struct Genre {
+struct TitleGenres {
     title_id: u32,
-    name: String,
+    genres: Vec<String>,
 }
 
-impl Genre {
-    fn from(line: String) -> Result<Vec<Self>, String> {
+impl TitleGenres {
+    fn from(line: String) -> Result<Self, String> {
         let values: Vec<&str> = line.split('\t').collect();
         let title_id: u32 = values.first().unwrap()[2..].parse().unwrap();
-        let genre = values.get(8).map(|&v| {
-            v.split(',')
-                .map(|v| v.to_string())
-                .map(|genre| Self {
-                    title_id,
-                    name: genre,
-                })
-                .collect::<Vec<Genre>>()
-        });
+        let genres = values
+            .get(8)
+            .ok_or(format!("Failed to extract genre for {title_id}"))
+            .map(|&v| v.split(',').map(|v| v.to_string()).collect())?;
 
-        genre.ok_or(format!("Failed to extract genre for {title_id}"))
+        Ok(Self {
+            title_id,
+            genres,
+        })
     }
 }
 
@@ -139,24 +137,25 @@ pub async fn parse_genres(conn: &mut SqliteConnection) -> Result<(), String> {
 
     let file = File::open(TITLE_TSV_FILE)
         .map_err(|e| format!("Unable to read from {TITLE_TSV_FILE} -> {e}"))?;
-    for (i, genres) in BufReader::new(file)
+    for (i, title_genres) in BufReader::new(file)
         .lines()
         .skip(1)
         .map(|l| l.map_err(|e| format!("Unable to read line -> {e}")))
-        .map(|l| l.and_then(Genre::from))
+        .map(|l| l.and_then(TitleGenres::from))
         .enumerate()
     {
-        for genre in genres? {
+        let title_genres = title_genres?;
+        for genre in title_genres.genres {
             let query = format!("INSERT INTO {GENRE_TABLE_NAME} VALUES($1, $2)");
             sqlx::query(&query)
-                .bind(genre.title_id)
-                .bind(&genre.name)
+                .bind(title_genres.title_id)
+                .bind(&genre)
                 .execute(&mut *tx)
                 .await
                 .map_err(|e| {
                     format!(
                         "Failed to insert {}, {}, into {GENRE_TABLE_NAME} => {e}",
-                        genre.title_id, genre.name,
+                       title_genres.title_id, genre,
                     )
                 })?;
         }
@@ -170,4 +169,3 @@ pub async fn parse_genres(conn: &mut SqliteConnection) -> Result<(), String> {
 
     Ok(())
 }
-

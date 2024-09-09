@@ -7,8 +7,6 @@ pub struct Name {
     pub name: String,
     pub birth_date: Option<u16>,
     pub death_date: Option<u16>,
-    pub professions: Vec<String>,
-    pub titles: Vec<u32>,
 }
 
 impl Name {
@@ -24,8 +22,6 @@ impl Name {
             name,
             birth_date,
             death_date,
-            professions,
-            titles,
         })
     }
 }
