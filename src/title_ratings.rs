@@ -21,16 +21,9 @@ impl TitleRating {
         let title_id = values.first().unwrap()[2..]
             .parse::<u32>()
             .map_err(|e| format!("File line ''{line}'' contains wrong format => {e}"))?;
-        let average_rating = values
-            .get(1)
-            .unwrap()
-            .parse::<f32>()
-            .map_err(|e| format!("File line ''{line}'' contains wrong format => {e}"))?;
-        let votes = values
-            .get(2)
-            .unwrap()
-            .parse::<u32>()
-            .map_err(|e| format!("File line ''{line}'' contains wrong format => {e}"))?;
+
+        let average_rating = values.get(1).unwrap().parse::<f32>().unwrap_or_default();
+        let votes = values.get(2).unwrap().parse::<u32>().unwrap_or_default();
 
         Ok(Self {
             title_id,
@@ -40,14 +33,14 @@ impl TitleRating {
     }
 }
 
-struct TitleRatingsInserter {
+pub struct TitleRatingsInserter {
     reader: BufReader<File>,
     table_name: String,
     count: usize,
 }
 
 impl TitleRatingsInserter {
-    fn new(file: File, table_name: String) -> Result<Self, String> {
+    pub fn new(file: File, table_name: String) -> Result<Self, String> {
         let mut reader = BufReader::new(file);
         let count = (&mut reader).lines().skip(1).count();
         reader
@@ -91,10 +84,10 @@ impl SqliteInserter for TitleRatingsInserter {
                 .map_err(|e| {
                     format!(
                         "Failed to insert {}, {}, {} into {} => {e}",
-                        self.table_name,
                         title_rating.title_id,
                         title_rating.average_rating,
-                        title_rating.votes
+                        title_rating.votes,
+                        self.table_name,
                     )
                 })?;
             percentage_printer(i, self.count);
@@ -110,7 +103,7 @@ impl SqliteInserter for TitleRatingsInserter {
 
     async fn create_table(&self, conn: &mut SqliteConnection) -> Result<(), String> {
         let query = format!(
-            "CREATE TABLE IF NOT EXISTS {} (title_id integer not null, average_rating float not null, votes integer not null, foreign key(title_id) references title(id))",
+            "CREATE TABLE IF NOT EXISTS {} (title_id integer not null, average_rating real not null, votes integer not null, foreign key(title_id) references title(id))",
             self.table_name
         );
 

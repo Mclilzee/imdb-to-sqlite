@@ -3,8 +3,10 @@ mod title_basics;
 mod title_ratings;
 mod utils;
 
-use std::{env, fs::File};
 use sqlx::{Connection, SqliteConnection};
+use std::{env, fs::File};
+use title_ratings::TitleRatingsInserter;
+use utils::SqliteInserter;
 
 const NAME_TABLE_NAME: &str = "name";
 const NAME_PROFESSION_TABLE_NAME: &str = "name_profession";
@@ -19,8 +21,11 @@ async fn main() -> Result<(), String> {
         .map_err(|e| format!("Unable to connect to {path} -> {e}"))?;
 
     title_basics::parse_titles(&mut conn).await?;
-    title_basics::parse_genres(&mut conn).await?;
+    let file = File::open("title.ratings.tsv")
+        .map_err(|e| format!("Failed to read title.ratings.tsv => {e}"))?;
+    TitleRatingsInserter::new(file, "title_ratings".to_string())?.insert(&mut conn).await?;
 
+    //title_basics::parse_genres(&mut conn).await?;
 
     println!("Finished Converting.");
     Ok(())
