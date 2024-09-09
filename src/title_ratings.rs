@@ -1,10 +1,10 @@
 use std::{
     fs::File,
-    io::{BufRead, BufReader},
+    io::{BufRead, BufReader, Seek},
     path::{Path, PathBuf},
 };
 
-use crate::utils::{Counter, SqliteParser};
+use crate::utils::{PercentagePrinter, SqliteInserter};
 
 const TITLE_RATINGS_TABLE: &str = "title_rating";
 
@@ -31,16 +31,10 @@ struct TitleRatings<BufReader> {
     count: usize,
 }
 
-impl From<&str> for TitleRatings<BufReader<File>> {
-    fn from(file_path: &str) -> Self {
-        let file = File::open(&file_path)
-            .map_err(|e| format!("Unable to read from {file_path} -> {e}")).unwrap();
-        let count = BufReader::new(file).lines().skip(1).count();
-
-        let file =
-            File::open(file_path).map_err(|e| format!("Unable to read from {file_path} -> {e}")).unwrap();
-        let buf = BufReader::new(file);
-
+impl From<BufReader<File>> for TitleRatings<BufReader<File>> {
+    fn from(mut buf: BufReader<File>) -> Self {
+        let count = (&mut buf).lines().skip(1).count();
+        buf.rewind();
         Self{ buf, count }
     }
 }
@@ -52,8 +46,8 @@ impl Iterator for TitleRatings<BufReader<File>> {
     }
 }
 
-impl SqliteParser for TitleRatings<BufReader<File>> {
-    fn parse(&mut self, conn: &mut sqlx::SqliteConnection) -> Result<(), String> {
+impl SqliteInserter for TitleRatings<BufReader<File>> {
+    fn insert(self, conn: &mut sqlx::SqliteConnection) -> Result<(), String> {
         todo!()
     }
 }

@@ -1,9 +1,5 @@
-use std::path::PathBuf;
+use std::{fs::File, io::BufReader, path::PathBuf};
 use sqlx::SqliteConnection;
-
-pub fn print_err(message: String) {
-    println!("{message}");
-}
 
 pub fn percentage_printer(progress: usize, total: usize) {
     if progress % 10000 != 0 {
@@ -24,7 +20,8 @@ pub fn percentage_printer(progress: usize, total: usize) {
     print!("] {:02}%", u8::min(n, 100));
 }
 
-pub trait SqliteParser: Iterator<Item = String> + From<String> {
-    fn parse(&mut self, conn: &mut SqliteConnection) -> Result<(), String>;
+pub trait SqliteInserter: Iterator<Item = String> + From<BufReader<File>> {
+    fn insert(self, conn: &mut SqliteConnection) -> Result<(), String>;
 }
+
 
