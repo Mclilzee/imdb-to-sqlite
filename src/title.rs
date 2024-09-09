@@ -50,7 +50,7 @@ impl Genre {
     fn from(line: String) -> Result<Vec<Self>, String> {
         let values: Vec<&str> = line.split('\t').collect();
         let title_id: u32 = values.first().unwrap()[2..].parse().unwrap();
-        let genre = values.get(4).map(|&v| {
+        let genre = values.get(8).map(|&v| {
             v.split(',')
                 .map(|v| v.to_string())
                 .map(|genre| Self {
