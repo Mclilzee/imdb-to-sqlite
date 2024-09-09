@@ -4,9 +4,8 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use crate::utils::{percentage_printer, SqliteInserter};
 use sqlx::{Connection, SqliteConnection};
-
-use crate::utils::SqliteInserter;
 
 const TITLE_RATINGS_TABLE: &str = "title_rating";
 
@@ -41,50 +40,64 @@ impl TitleRating {
     }
 }
 
-struct TitleRatingsInserter<BufReader> {
-    buf: BufReader,
+struct TitleRatingsInserter {
+    reader: BufReader<File>,
+    table_name: String,
     count: usize,
 }
 
-impl From<BufReader<File>> for TitleRatingsInserter<BufReader<File>> {
-    fn from(mut buf: BufReader<File>) -> Self {
-        let count = (&mut buf).lines().skip(1).count();
-        buf.rewind();
-        Self { buf, count }
+impl TitleRatingsInserter {
+    fn new(file: File, table_name: String) -> Result<Self, String> {
+        let mut reader = BufReader::new(file);
+        let count = (&mut reader).lines().skip(1).count();
+        reader
+            .rewind()
+            .map_err(|e| format!("Failed to rewind reader => {e}"))?;
+
+        Ok(Self {
+            reader,
+            count,
+            table_name,
+        })
     }
 }
 
-impl SqliteInserter for TitleRatingsInserter<BufReader<File>> {
+impl SqliteInserter for TitleRatingsInserter {
     async fn insert(self, conn: &mut SqliteConnection) -> Result<(), String> {
-        Self::create_table(&mut conn);
+        self.create_table(conn).await?;
 
         let mut tx = conn
             .begin()
             .await
             .map_err(|e| format!("Failed to start transaction => {e}"))?;
 
+        println!("-- Inserting Into {} Table --", self.table_name);
         for (i, title_rating) in self
-            .buf
+            .reader
             .lines()
             .skip(1)
             .map(|l| l.map_err(|e| format!("Unable to read line -> {e}")))
             .map(|l| l.and_then(TitleRating::from))
             .enumerate()
         {
-            let query = format!("INSERT INTO {GENRE_TABLE_NAME} VALUES($1, $2)");
+            let query = format!("INSERT INTO {} VALUES($1, $2, $3)", self.table_name);
             let title_rating = title_rating?;
             sqlx::query(&query)
                 .bind(title_rating.title_id)
+                .bind(title_rating.average_rating)
                 .bind(title_rating.votes)
                 .execute(&mut *tx)
                 .await
                 .map_err(|e| {
                     format!(
-                        "Failed to insert {}, {}, {} into {GENRE_TABLE_NAME} => {e}",
-                        title_rating.title_id, title_rating.average_rating, title_rating.votes
+                        "Failed to insert {}, {}, {} into {} => {e}",
+                        self.table_name,
+                        title_rating.title_id,
+                        title_rating.average_rating,
+                        title_rating.votes
                     )
                 })?;
-            percentage_printer(i, count);
+            percentage_printer(i, self.count);
         }
         println!();
 
@@ -95,5 +108,17 @@ impl SqliteInserter for TitleRatingsInserter<BufReader<File>> {
         Ok(())
     }
 
-    async fn create_table(conn: &mut SqliteConnection) {}
+    async fn create_table(&self, conn: &mut SqliteConnection) -> Result<(), String> {
+        let query = format!(
+            "CREATE TABLE IF NOT EXISTS {} (title_id integer not null, average_rating float not null, votes integer not null, foreign key(title_id) references title(id))",
+            self.table_name
+        );
+
+        sqlx::raw_sql(&query)
+            .execute(conn)
+            .await
+            .map_err(|e| format!("Unable to create {} table -> {e}", self.table_name))?;
+
+        Ok(())
+    }
 }
