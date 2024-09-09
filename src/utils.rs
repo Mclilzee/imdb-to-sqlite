@@ -24,6 +24,7 @@ pub fn percentage_printer(progress: usize, total: usize) {
     print!("] {:02}%", u8::min(n, 100));
 }
 
-pub trait SqliteParser: Iterator<Item = PathBuf> {
-    fn parse(conn: &mut SqliteConnection) -> Result<(), String>;
+pub trait SqliteParser: Iterator<Item = String> + From<String> {
+    fn parse(&mut self, conn: &mut SqliteConnection) -> Result<(), String>;
 }
+

@@ -1,7 +1,7 @@
 use sqlx::{Connection, SqliteConnection};
 use std::{
     fs::File,
-    io::{BufRead, BufReader},
+    io::{BufRead, BufReader, Seek},
 };
 
 use crate::utils::percentage_printer;
@@ -128,16 +128,18 @@ pub async fn parse_genres(conn: &mut SqliteConnection) -> Result<(), String> {
     println!("-- Inserting Into {GENRE_TABLE_NAME} --");
     let file = File::open(TITLE_TSV_FILE)
         .map_err(|e| format!("Unable to read from {TITLE_TSV_FILE} -> {e}"))?;
-    let count = BufReader::new(file).lines().skip(1).count();
+    let mut reader = BufReader::new(file);
+
+    let count = (&mut reader).lines().skip(1).count();
+    reader.rewind();
 
     let mut tx = conn
         .begin()
         .await
         .map_err(|e| format!("Failed to start transaction => {e}"))?;
 
-    let file = File::open(TITLE_TSV_FILE)
-        .map_err(|e| format!("Unable to read from {TITLE_TSV_FILE} -> {e}"))?;
-    for (i, title_genres) in BufReader::new(file)
+
+    for (i, title_genres) in reader
         .lines()
         .skip(1)
         .map(|l| l.map_err(|e| format!("Unable to read line -> {e}")))

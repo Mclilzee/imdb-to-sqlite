@@ -1,8 +1,4 @@
-use std::{
-    fs::File,
-    io::{BufRead, BufReader},
-    path::{Path, PathBuf},
-};
+use std::{io::{BufRead, BufReader}, path::{Path, PathBuf}};
 
 use crate::utils::{Counter, SqliteParser};
 
@@ -27,33 +23,34 @@ const TITLE_RATINGS_TABLE: &str = "title_rating";
 //}
 
 struct TitleRatings<BufReader> {
-    buf: BufReader,
-    count: usize,
+    buf: BufReader
 }
 
-impl From<&str> for TitleRatings<BufReader<File>> {
-    fn from(file_path: &str) -> Self {
-        let file = File::open(&file_path)
-            .map_err(|e| format!("Unable to read from {file_path} -> {e}")).unwrap();
-        let count = BufReader::new(file).lines().skip(1).count();
-
-        let file =
-            File::open(file_path).map_err(|e| format!("Unable to read from {file_path} -> {e}")).unwrap();
-        let buf = BufReader::new(file);
-
-        Self{ buf, count }
+impl From<PathBuf> for TitleRatings<BufReader<PathBuf>> {
+    fn from(file: String) -> Self {
+        Self { buf: BufReader::new(file)}
     }
 }
 
-impl Iterator for TitleRatings<BufReader<File>> {
+impl Iterator for TitleRatings<BufReader<PathBuf>> {
     type Item = String;
     fn next(&mut self) -> Option<Self::Item> {
         todo!()
     }
 }
 
-impl SqliteParser for TitleRatings<BufReader<File>> {
+impl SqliteParser for TitleRatings<BufReader<PathBuf>> {
+    fn count(&mut self) -> u32 {
+        32
+    }
+
     fn parse(&mut self, conn: &mut sqlx::SqliteConnection) -> Result<(), String> {
         todo!()
+    }
+}
+
+impl Counter for TitleRatings<BufReader<PathBuf>> {
+    fn count(&mut self) -> u32 {
+        32
     }
 }
