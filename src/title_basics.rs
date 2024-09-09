@@ -64,34 +64,7 @@ impl Genre {
     }
 }
 
-pub async fn parse_title_basics_tsv(conn: &mut SqliteConnection) -> Result<(), String> {
-    create_tables(conn).await?;
-    insert_titles(conn).await?;
-    insert_genres(conn).await?;
-    Ok(())
-}
-
-async fn create_tables(conn: &mut SqliteConnection) -> Result<(), String> {
-    let mut tx = conn
-        .begin()
-        .await
-        .map_err(|e| format!("Failed to start transaction => {e}"))?;
-
-    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {TITLE_TABLE_NAME} (id integer primary key, primary_name text not null, original_name text not null, title_type text not null, release_date integer, end_date integer)").as_str())
-        .execute(&mut *tx)
-        .await.map_err(|e| format!("Unable to create names table -> {e}"))?;
-
-    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {GENRE_TABLE_NAME} (title_id integer not null, genre text not null, foreign key(title_id) references title(id))").as_str())
-        .execute(&mut *tx)
-        .await.map_err(|e| format!("Unable to create names table -> {e}"))?;
-
-    tx.commit()
-        .await
-        .map_err(|e| format!("Failed to commit transactions => {e}"))?;
-    Ok(())
-}
-
-async fn insert_titles(conn: &mut SqliteConnection) -> Result<(), String> {
+pub async fn parse_titles(conn: &mut SqliteConnection) -> Result<(), String> {
     println!("-- Inserting Into {TITLE_TABLE_NAME} --");
     let file = File::open(TITLE_TSV_FILE)
         .map_err(|e| format!("Unable to read from {TITLE_TSV_FILE} -> {e}"))?;
@@ -101,6 +74,14 @@ async fn insert_titles(conn: &mut SqliteConnection) -> Result<(), String> {
         .begin()
         .await
         .map_err(|e| format!("Failed to start transaction => {e}"))?;
+
+    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {GENRE_TABLE_NAME} (title_id integer not null, genre text not null, foreign key(title_id) references title(id))").as_str())
+        .execute(&mut *tx)
+        .await.map_err(|e| format!("Unable to create names table -> {e}"))?;
+
+    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {TITLE_TABLE_NAME} (id integer primary key, primary_name text not null, original_name text not null, title_type text not null, release_date integer, end_date integer)").as_str())
+        .execute(&mut *tx)
+        .await.map_err(|e| format!("Unable to create names table -> {e}"))?;
 
     let file = File::open(TITLE_TSV_FILE)
         .map_err(|e| format!("Unable to read from {TITLE_TSV_FILE} -> {e}"))?;
@@ -145,7 +126,7 @@ async fn insert_titles(conn: &mut SqliteConnection) -> Result<(), String> {
     Ok(())
 }
 
-async fn insert_genres(conn: &mut SqliteConnection) -> Result<(), String> {
+pub async fn parse_genres(conn: &mut SqliteConnection) -> Result<(), String> {
     println!("-- Inserting Into {GENRE_TABLE_NAME} --");
     let file = File::open(TITLE_TSV_FILE)
         .map_err(|e| format!("Unable to read from {TITLE_TSV_FILE} -> {e}"))?;
@@ -189,3 +170,4 @@ async fn insert_genres(conn: &mut SqliteConnection) -> Result<(), String> {
 
     Ok(())
 }
+
