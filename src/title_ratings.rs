@@ -1,13 +1,10 @@
 use std::{
     fs::File,
     io::{BufRead, BufReader, Seek},
-    path::{Path, PathBuf},
 };
 
 use crate::utils::{percentage_printer, SqliteInserter};
 use sqlx::{Connection, SqliteConnection};
-
-const TITLE_RATINGS_TABLE: &str = "title_rating";
 
 struct TitleRating {
     title_id: u32,
