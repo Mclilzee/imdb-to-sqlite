@@ -22,8 +22,8 @@ async fn main() -> Result<(), String> {
         .await
         .map_err(|e| format!("Unable to connect to {path} -> {e}"))?;
 
-    let _ = parse_title_ratings(&mut conn).await.map_err(|e| println!("{e}"));
     title_basics::parse_titles(&mut conn).await?;
+    let _ = parse_title_ratings(&mut conn).await.map_err(|e| println!("{e}"));
 
     //title_basics::parse_genres(&mut conn).await?;
 

@@ -3,7 +3,7 @@ use std::{
     io::{BufRead, BufReader, Seek},
 };
 
-use crate::utils::{percentage_printer, two_decimal, SqliteInserter};
+use crate::utils::{percentage_printer, SqliteInserter};
 use sqlx::{Connection, SqliteConnection};
 
 struct TitleRating {
@@ -23,7 +23,6 @@ impl TitleRating {
             .get(1)
             .unwrap()
             .parse::<f32>()
-            .map(two_decimal)
             .unwrap_or_default();
 
         let votes = values.get(2).unwrap().parse::<u32>().unwrap_or_default();
