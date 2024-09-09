@@ -1,3 +1,7 @@
+use std::path::PathBuf;
+
+use sqlx::SqliteConnection;
+
 pub fn percentage_printer(progress: usize, total: usize) {
     if progress % 10000 != 0 {
         return;
@@ -15,4 +19,8 @@ pub fn percentage_printer(progress: usize, total: usize) {
     }
 
     print!("] {:02}%", u8::min(n, 100));
+}
+
+pub trait SqliteParser: Iterator<Item = PathBuf> {
+    fn parse(conn: &mut SqliteConnection) -> Result<(), String>;
 }
