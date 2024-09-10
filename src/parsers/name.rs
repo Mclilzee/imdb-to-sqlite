@@ -23,31 +23,6 @@ impl Name {
     }
 }
 
-struct NameTitles {
-    name_id: u32,
-    titles: Vec<u32>
-}
-
-impl NameTitles {
-
-    fn from(line: String) -> Result<Self, String> {
-        let values: Vec<&str> = line.split('\t').collect();
-        let name_id: u32 = values.first().unwrap()[2..].parse().unwrap();
-
-        let titles = values
-            .get(5)
-            .map(|v| v.split(','))
-            .map(|v| v.flat_map(|n| n[2..].parse::<u32>()).collect::<Vec<_>>())
-            .unwrap();
-
-        Ok(Self {
-            name_id,
-            titles
-        })
-
-    }
-}
-
 pub fn get_names() -> Result<Vec<Name>, String> {
     println!("Parsing {NAMES_TSV_FILE}");
     let names = File::open(NAMES_TSV_FILE)
@@ -68,9 +43,6 @@ async fn create_tables(pool: &SqlitePool) -> Result<(), String> {
 
 
 
-    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {NAME_TITLE_TABLE_NAME} (name_id integer not null, title_id integer not null, foreign key(name_id) references name(id), foreign key(title_id) references title(id))").as_str())
-        .execute(pool)
-        .await.map_err(|e| format!("Unable to create names table -> {e}"))?;
 
     Ok(())
 }

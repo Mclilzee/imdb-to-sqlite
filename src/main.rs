@@ -43,6 +43,9 @@ async fn main() -> Result<(), String> {
         println!("{str}");
     }
 
+    if let Err(str) = name_titles::parse_name_professions(NAME_BASICS_FILE, NAME_PROFESSION_TABLE_NAME, &mut conn).await {
+        println!("{str}");
+    }
 
     println!("Finished Converting.");
     Ok(())
