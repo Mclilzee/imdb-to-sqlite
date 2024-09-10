@@ -1,3 +1,5 @@
+use std::io::{stdout, Write};
+
 pub fn percentage_printer(progress: usize, total: usize) {
     if progress % 10000 != 0 {
         return;
@@ -15,4 +17,5 @@ pub fn percentage_printer(progress: usize, total: usize) {
     }
 
     print!("] {:02}%", u8::min(n, 100));
+    stdout().flush().unwrap();
 }
