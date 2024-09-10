@@ -1,4 +1,3 @@
-use sqlx::SqliteConnection;
 
 pub fn percentage_printer(progress: usize, total: usize) {
     if progress % 10000 != 0 {

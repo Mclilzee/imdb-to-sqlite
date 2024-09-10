@@ -58,7 +58,7 @@ pub async fn parse_name_titles(
         .map(|l| l.map_err(|e| format!("Unable to read line -> {e}")))
         .map(|l| l.and_then(NameTitles::from))
         .enumerate() {
-        if let Ok(name_title) = name_title {;
+        if let Ok(name_title) = name_title {
             for title in name_title.titles.iter() {
                 let result = sqlx::query(&query)
                     .bind(name_title.name_id)

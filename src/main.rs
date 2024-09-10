@@ -3,7 +3,7 @@ mod utils;
 
 use parsers::*;
 use sqlx::{Connection, SqliteConnection};
-use std::{env, fs::File, process::exit};
+use std::{env, fs::File};
 
 const TITLE_BASICS_FILE: &str = "title.basics.tsv";
 const TITLE_TABLE_NAME: &str = "title";
