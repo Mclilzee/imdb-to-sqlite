@@ -5,14 +5,17 @@ use parsers::*;
 use sqlx::{Connection, SqliteConnection};
 use std::{env, fs::File, process::exit};
 
-const TITLE_FILE_NAME: &str = "title.basics.tsv";
+const TITLE_BASICS_FILE: &str = "title.basics.tsv";
 const TITLE_TABLE_NAME: &str = "title";
+const TITLE_GENRES_TABLE_NAME: &str = "title.basics.tsv";
 
+const TITLE_RATING_FILE_NAME: &str = "title.ratings.tsv";
+const TITLE_RATING_TABLE_NAME: &str = "title_rating";
+
+const NAME_BASICS_FILE: &str = "name.basics.tsv";
 const NAME_TABLE_NAME: &str = "name";
 const NAME_PROFESSION_TABLE_NAME: &str = "name_profession";
 const NAME_TITLE_TABLE_NAME: &str = "name_title";
-const TITLE_RATING_TABLE_NAME: &str = "title_rating";
-const TITLE_RATING_FILE_NAME: &str = "title.ratings.tsv";
 
 #[tokio::main]
 async fn main() -> Result<(), String> {
@@ -22,11 +25,24 @@ async fn main() -> Result<(), String> {
         .await
         .map_err(|e| format!("Unable to connect to {path} -> {e}"))?;
 
-    if let Err(str) = title::prase_titles_file(TITLE_FILE_NAME, TITLE_TABLE_NAME, &mut conn).await {
+    if let Err(str) = title::prase_titles(TITLE_BASICS_FILE, TITLE_TABLE_NAME, &mut conn).await {
         println!("{str}");
         println!("Critical Error, unable to insert one of main tables, the program will terminate");
         exit(1);
     }
+
+    if let Err(str) = title_genres::parse_title_genres(TITLE_BASICS_FILE, TITLE_GENRES_TABLE_NAME, &mut conn).await {
+        println!("{str}");
+    }
+
+    if let Err(str) = title_ratings::parse_title_ratings(TITLE_RATING_FILE_NAME, TITLE_RATING_TABLE_NAME, &mut conn).await {
+        println!("{str}");
+    }
+
+    if let Err(str) = name_professions::parse_name_professions(NAME_BASICS_FILE, NAME_PROFESSION_TABLE_NAME, &mut conn).await {
+        println!("{str}");
+    }
+
 
     println!("Finished Converting.");
     Ok(())

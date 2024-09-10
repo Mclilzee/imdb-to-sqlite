@@ -18,8 +18,3 @@ pub fn percentage_printer(progress: usize, total: usize) {
 
     print!("] {:02}%", u8::min(n, 100));
 }
-
-pub trait SqliteInserter {
-    async fn insert(self, conn: &mut SqliteConnection) -> Result<(), String>;
-    async fn create_table(&self, conn: &mut SqliteConnection) -> Result<(), String>;
-}

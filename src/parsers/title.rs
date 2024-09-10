@@ -36,7 +36,7 @@ impl Title {
     }
 }
 
-pub async fn prase_titles_file(file_name: &str, table_name: &str, conn: &mut SqliteConnection) -> Result<(), String> {
+pub async fn prase_titles(file_name: &str, table_name: &str, conn: &mut SqliteConnection) -> Result<(), String> {
     println!("-- Inserting Into {table_name} --");
     create_table(table_name, conn).await?;
     let file = File::open(file_name)
