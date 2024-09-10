@@ -1,12 +1,9 @@
-mod name;
-mod title;
-mod title_ratings;
+mod parsers;
 mod utils;
 
+use parsers::*;
 use sqlx::{Connection, SqliteConnection};
 use std::{env, fs::File, process::exit};
-use title_ratings::TitleRatingsInserter;
-use utils::SqliteInserter;
 
 const TITLE_FILE_NAME: &str = "title.basics.tsv";
 const TITLE_TABLE_NAME: &str = "title";

@@ -43,7 +43,7 @@ pub async fn prase_titles_file(file_name: &str, table_name: &str, conn: &mut Sql
         .map_err(|e| format!("Unable to read from {file_name} -> {e}"))?;
     let mut reader = BufReader::new(file);
     let count = (&mut reader).lines().skip(1).count();
-    reader.rewind();
+    reader.rewind().map_err(|e| format!("Failed to read file {file_name} after counting => {e}"))?;
 
     let mut tx = conn
         .begin()
@@ -94,7 +94,7 @@ pub async fn prase_titles_file(file_name: &str, table_name: &str, conn: &mut Sql
 async fn create_table(table_name: &str, conn: &mut SqliteConnection) -> Result<(), String> {
     sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {table_name} (id integer primary key, primary_name text not null, original_name text not null, title_type text not null, release_date integer, end_date integer)").as_str())
         .execute(conn)
-        .await.map_err(|e| format!("Unable to create names table -> {e}"))?;
+        .await.map_err(|e| format!("Unable to create {table_name} table -> {e}"))?;
 
     Ok(())
 }

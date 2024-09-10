@@ -1,3 +1,9 @@
+use std::{fs::File, io::{BufRead, BufReader, Seek}};
+
+use sqlx::{SqliteConnection, Connection};
+
+use crate::utils::percentage_printer;
+
 struct TitleGenres {
     title_id: u32,
     genres: Vec<String>,
@@ -19,14 +25,15 @@ impl TitleGenres {
     }
 }
 
-pub async fn parse_genres(conn: &mut SqliteConnection) -> Result<(), String> {
-    println!("-- Inserting Into {GENRE_TABLE_NAME} --");
-    let file = File::open(TITLE_TSV_FILE)
-        .map_err(|e| format!("Unable to read from {TITLE_TSV_FILE} -> {e}"))?;
-    let mut reader = BufReader::new(file);
+pub async fn parse_title_genres(file_name: &str, table_name: &str, conn: &mut SqliteConnection) -> Result<(), String> {
+    println!("-- Inserting Into {table_name} --");
+    create_table(table_name, conn).await?;
 
+    let file = File::open(file_name)
+        .map_err(|e| format!("Unable to read from {file_name} -> {e}"))?;
+    let mut reader = BufReader::new(file);
     let count = (&mut reader).lines().skip(1).count();
-    reader.rewind();
+    reader.rewind().map_err(|e| format!("Failed to read file {file_name} after counting => {e}"))?;
 
     let mut tx = conn
         .begin()
@@ -43,7 +50,7 @@ pub async fn parse_genres(conn: &mut SqliteConnection) -> Result<(), String> {
     {
         let title_genres = title_genres?;
         for genre in title_genres.genres {
-            let query = format!("INSERT INTO {GENRE_TABLE_NAME} VALUES($1, $2)");
+            let query = format!("INSERT INTO {table_name} VALUES($1, $2)");
             sqlx::query(&query)
                 .bind(title_genres.title_id)
                 .bind(&genre)
@@ -51,7 +58,7 @@ pub async fn parse_genres(conn: &mut SqliteConnection) -> Result<(), String> {
                 .await
                 .map_err(|e| {
                     format!(
-                        "Failed to insert {}, {}, into {GENRE_TABLE_NAME} => {e}",
+                        "Failed to insert {}, {}, into {table_name} => {e}",
                        title_genres.title_id, genre,
                     )
                 })?;
@@ -63,6 +70,14 @@ pub async fn parse_genres(conn: &mut SqliteConnection) -> Result<(), String> {
     tx.commit()
         .await
         .map_err(|e| format!("Failed to commit transactions => {e}"))?;
+
+    Ok(())
+}
+
+async fn create_table(table_name: &str, conn: &mut SqliteConnection) -> Result<(), String> {
+    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {table_name} (title_id integer not null, genre text not null, foreign key(title_id) references title(id))").as_str())
+        .execute(conn)
+        .await.map_err(|e| format!("Unable to create {table_name} table -> {e}"))?;
 
     Ok(())
 }
