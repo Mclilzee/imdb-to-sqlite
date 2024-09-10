@@ -1,4 +1,3 @@
-use std::{fs::File, io::BufReader, path::PathBuf};
 use sqlx::SqliteConnection;
 
 pub fn percentage_printer(progress: usize, total: usize) {
@@ -24,4 +23,3 @@ pub trait SqliteInserter {
     async fn insert(self, conn: &mut SqliteConnection) -> Result<(), String>;
     async fn create_table(&self, conn: &mut SqliteConnection) -> Result<(), String>;
 }
-

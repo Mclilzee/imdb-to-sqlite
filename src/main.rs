@@ -1,12 +1,15 @@
 mod name;
-mod title_basics;
+mod title;
 mod title_ratings;
 mod utils;
 
 use sqlx::{Connection, SqliteConnection};
-use std::{env, fs::File};
+use std::{env, fs::File, process::exit};
 use title_ratings::TitleRatingsInserter;
 use utils::SqliteInserter;
+
+const TITLE_FILE_NAME: &str = "title.basics.tsv";
+const TITLE_TABLE_NAME: &str = "title";
 
 const NAME_TABLE_NAME: &str = "name";
 const NAME_PROFESSION_TABLE_NAME: &str = "name_profession";
@@ -22,10 +25,11 @@ async fn main() -> Result<(), String> {
         .await
         .map_err(|e| format!("Unable to connect to {path} -> {e}"))?;
 
-    title_basics::parse_titles(&mut conn).await?;
-    let _ = parse_title_ratings(&mut conn).await.map_err(|e| println!("{e}"));
-
-    //title_basics::parse_genres(&mut conn).await?;
+    if let Err(str) = title::prase_titles_file(TITLE_FILE_NAME, TITLE_TABLE_NAME, &mut conn).await {
+        println!("{str}");
+        println!("Critical Error, unable to insert one of main tables, the program will terminate");
+        exit(1);
+    }
 
     println!("Finished Converting.");
     Ok(())
@@ -38,13 +42,4 @@ fn get_database_path(args: &[String]) -> Result<&str, String> {
 
     File::create(path).map_err(|e| format!("Failed to create file {path} => {e}"))?;
     Ok(path)
-}
-
-async fn parse_title_ratings(conn: &mut SqliteConnection) -> Result<(), String> {
-    let file = File::open(TITLE_RATING_FILE_NAME)
-        .map_err(|e| format!("Failed to read {TITLE_RATING_FILE_NAME} => {e}"))?;
-
-    TitleRatingsInserter::new(file, TITLE_RATING_TABLE_NAME.to_string())?.insert(conn).await?;
-
-    Ok(())
 }
