@@ -1,7 +1,5 @@
 use std::{fs::File, io::{BufRead, BufReader, Seek}};
-
 use sqlx::{SqliteConnection, Connection};
-
 use crate::utils::percentage_printer;
 
 struct TitleGenres {
