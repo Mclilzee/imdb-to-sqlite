@@ -25,11 +25,7 @@ async fn main() -> Result<(), String> {
         .await
         .map_err(|e| format!("Unable to connect to {path} -> {e}"))?;
 
-    if let Err(str) = title::prase_titles(TITLE_BASICS_FILE, TITLE_TABLE_NAME, &mut conn).await {
-        println!("{str}");
-        println!("Critical Error, unable to insert one of main tables, the program will terminate");
-        exit(1);
-    }
+    insert_main_tables(&mut conn).await?;
 
     if let Err(str) = title_genres::parse_title_genres(TITLE_BASICS_FILE, TITLE_GENRES_TABLE_NAME, &mut conn).await {
         println!("{str}");
@@ -43,9 +39,6 @@ async fn main() -> Result<(), String> {
         println!("{str}");
     }
 
-    if let Err(str) = name_titles::parse_name_professions(NAME_BASICS_FILE, NAME_PROFESSION_TABLE_NAME, &mut conn).await {
-        println!("{str}");
-    }
 
     println!("Finished Converting.");
     Ok(())
@@ -58,4 +51,23 @@ fn get_database_path(args: &[String]) -> Result<&str, String> {
 
     File::create(path).map_err(|e| format!("Failed to create file {path} => {e}"))?;
     Ok(path)
+}
+
+async fn insert_main_tables(conn: &mut SqliteConnection) -> Result<(), String> {
+    if let Err(str) = title::prase_titles(TITLE_BASICS_FILE, TITLE_TABLE_NAME, conn).await {
+        println!("{str}");
+        return Err("Critical Error, unable to insert one of main tables, the program will terminate".to_string());
+    }
+
+    if let Err(str) = name::parse_names(NAME_BASICS_FILE, NAME_TABLE_NAME, conn).await {
+        println!("{str}");
+        return Err("Critical Error, unable to insert one of main tables, the program will terminate".to_string());
+    }
+
+    if let Err(str) = name_titles::parse_name_titles(NAME_BASICS_FILE, NAME_TITLE_TABLE_NAME, conn).await {
+        println!("{str}");
+        return Err("Critical Error, unable to insert one of main tables, the program will terminate".to_string());
+    }
+
+    Ok(())
 }

@@ -4,7 +4,6 @@ use std::{
 };
 
 use sqlx::{Connection, SqliteConnection};
-
 use crate::utils::percentage_printer;
 
 struct NameProfessions {

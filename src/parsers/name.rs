@@ -1,4 +1,11 @@
-use std::{fs::File, io::{BufRead, BufReader}};
+use std::{
+    fs::File,
+    io::{BufRead, BufReader, Seek},
+};
+
+use crate::utils::percentage_printer;
+use sqlx::{Connection, SqliteConnection};
+
 pub struct Name {
     pub id: u32,
     pub name: String,
@@ -23,38 +30,36 @@ impl Name {
     }
 }
 
-pub fn get_names() -> Result<Vec<Name>, String> {
-    println!("Parsing {NAMES_TSV_FILE}");
-    let names = File::open(NAMES_TSV_FILE)
-        .map_err(|e| format!("Unable to read from {NAMES_TSV_FILE} -> {e}"))?;
+pub async fn parse_names(
+    file_name: &str,
+    table_name: &str,
+    conn: &mut SqliteConnection,
+) -> Result<(), String> {
+    println!("-- Inserting Into {table_name} --");
+    create_table(table_name, conn).await?;
 
-    BufReader::new(names)
+    let file =
+        File::open(file_name).map_err(|e| format!("Unable to read from {file_name} -> {e}"))?;
+    let mut reader = BufReader::new(file);
+    let count = (&mut reader).lines().skip(1).count();
+    reader
+        .rewind()
+        .map_err(|e| format!("Failed to read file {file_name} after counting => {e}"))?;
+
+    let mut tx = conn
+        .begin()
+        .await
+        .map_err(|e| format!("Failed to start transaction => {e}"))?;
+
+    let query = format!("INSERT INTO {table_name} VALUES($1, $2, $3, $4)");
+    for (i, name) in reader
         .lines()
         .skip(1)
         .map(|l| l.map_err(|e| format!("Unable to read line -> {e}")))
         .map(|l| l.and_then(Name::from))
-        .collect()
-}
-
-async fn create_tables(pool: &SqlitePool) -> Result<(), String> {
-    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {NAME_TABLE_NAME} (id integer primary key, name text not null, birth_year integer, death_year integer)").as_str())
-        .execute(pool)
-        .await.map_err(|e| format!("Unable to create names table -> {e}"))?;
-
-
-
-
-    Ok(())
-}
-
-async fn fill_name_table(pool: &SqlitePool, names: &[Name]) -> Result<(), String> {
-    let mut tx = pool
-        .begin()
-        .await
-        .map_err(|e| format!("Failed to start transaction => {e}"))?;
-    println!("-- Name Table Progress --");
-    let query = format!("INSERT INTO {NAME_TABLE_NAME} VALUES($1, $2, $3, $4)");
-    for (i, name) in names.iter().enumerate() {
+        .enumerate()
+    {
+        let name = name?;
         sqlx::query(&query)
             .bind(name.id)
             .bind(&name.name)
@@ -64,47 +69,26 @@ async fn fill_name_table(pool: &SqlitePool, names: &[Name]) -> Result<(), String
             .await
             .map_err(|e| {
                 format!(
-                    "Failed to insert {}, {}, {:?}, {:?} into {NAME_TABLE_NAME} => {e}",
+                    "Failed to insert {}, {}, {:?}, {:?} into {table_name} => {e}",
                     name.id, name.name, name.birth_date, name.death_date
                 )
             })?;
 
-        print_insertion_percentage(i, names.len());
+        percentage_printer(i, count);
     }
     println!();
 
     tx.commit()
         .await
         .map_err(|e| format!("Failed to commit transactions => {e}"))?;
-    println!("Names inserted");
 
     Ok(())
 }
 
+async fn create_table(table_name: &str, conn: &mut SqliteConnection) -> Result<(), String> {
+    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {table_name} (id integer primary key, name text not null, birth_year integer, death_year integer)").as_str())
+        .execute(conn)
+        .await.map_err(|e| format!("Unable to create {table_name} table -> {e}"))?;
 
-async fn fill_name_title_table(pool: &SqlitePool, names: &[Name]) -> Result<(), String> {
-    let mut tx = pool
-        .begin()
-        .await
-        .map_err(|e| format!("Failed to start transaction => {e}"))?;
-
-    println!("-- Name Title Table Progress --");
-    let query = format!("INSERT INTO {NAME_TITLE_TABLE_NAME} VALUES($1, $2)");
-    for (i, name) in names.iter().enumerate() {
-        for title in name.titles.iter() {
-            sqlx::query(&query)
-                .bind(name.id)
-                .bind(title)
-                .execute(&mut *tx)
-                .await
-                .ok();
-        }
-        print_insertion_percentage(i, names.len());
-    }
-    println!();
-
-    tx.commit()
-        .await
-        .map_err(|e| format!("Failed to commit transactions => {e}"))?;
     Ok(())
 }

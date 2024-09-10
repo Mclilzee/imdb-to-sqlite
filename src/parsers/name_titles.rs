@@ -58,19 +58,23 @@ pub async fn parse_name_titles(
         .map(|l| l.map_err(|e| format!("Unable to read line -> {e}")))
         .map(|l| l.and_then(NameTitles::from))
         .enumerate() {
-        let name_title = name_title?;
-        for title in name_title.titles.iter() {
-            sqlx::query(&query)
-                .bind(name_title.name_id)
-                .bind(title)
-                .execute(&mut *tx)
-                .await
-                .map_err(|e| {
-                    format!(
-                        "Failed to insert {}, {} into {table_name} => {e}",
-                        name_title.name_id, title
-                    )
-                })?;
+        if let Ok(name_title) = name_title {;
+            for title in name_title.titles.iter() {
+                let result = sqlx::query(&query)
+                    .bind(name_title.name_id)
+                    .bind(title)
+                    .execute(&mut *tx)
+                    .await
+                    .map_err(|e| {
+                        format!(
+                            "Failed to insert {}, {} into {table_name} => {e}",
+                            name_title.name_id, title
+                        )
+                    });
+                if let Err(str) = result {
+                    println!("{str}");
+                }
+            }
         }
 
         percentage_printer(i, count);
