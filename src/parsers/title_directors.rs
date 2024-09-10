@@ -1,6 +1,9 @@
-use std::{fs::File, io::{BufRead, BufReader, Seek}};
-use sqlx::{SqliteConnection, Connection};
 use crate::utils::percentage_printer;
+use sqlx::{Connection, SqliteConnection};
+use std::{
+    fs::File,
+    io::{BufRead, BufReader, Seek},
+};
 
 struct TitleDirectors {
     title_id: u32,
@@ -17,11 +20,8 @@ impl TitleDirectors {
 
         let directors = values
             .get(1)
-            .map(|&s| {
-                s.split(',')
-                    .filter_map(|v| v[2..].parse::<u32>().ok())
-                    .collect::<Vec<u32>>()
-            })
+            .map(|&s| s.split(','))
+            .map(|s| s.flat_map(|v| v[2..].parse::<u32>()).collect::<Vec<u32>>())
             .ok_or(format!("Failed to parse directores from {line}"))?;
 
         Ok(Self {

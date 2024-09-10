@@ -16,8 +16,16 @@ pub struct Name {
 impl Name {
     fn from(line: String) -> Result<Self, String> {
         let values: Vec<&str> = line.split('\t').collect();
-        let id: u32 = values.first().unwrap()[2..].parse().unwrap();
-        let name = values.get(1).unwrap().to_string();
+        let id: u32 = values
+            .first()
+            .and_then(|s| s[2..].parse().ok())
+            .ok_or(format!("Failed to parse id from {line}"))?;
+
+        let name = values
+            .get(1)
+            .map(|s| s.to_string())
+            .ok_or(format!("Failed to parse name from {line}"))?;
+
         let birth_date = values.get(2).and_then(|v| v.parse::<u16>().ok());
         let death_date = values.get(3).and_then(|v| v.parse::<u16>().ok());
 

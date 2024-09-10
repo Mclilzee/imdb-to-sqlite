@@ -3,8 +3,8 @@ use std::{
     io::{BufRead, BufReader, Seek},
 };
 
-use sqlx::{Connection, SqliteConnection};
 use crate::utils::percentage_printer;
+use sqlx::{Connection, SqliteConnection};
 
 struct NameProfessions {
     name_id: u32,
@@ -14,11 +14,15 @@ struct NameProfessions {
 impl NameProfessions {
     fn from(line: String) -> Result<Self, String> {
         let values: Vec<&str> = line.split('\t').collect();
-        let name_id: u32 = values.first().unwrap()[2..].parse().unwrap();
+        let name_id: u32 = values
+            .first()
+            .and_then(|s| s[2..].parse().ok())
+            .ok_or(format!("Failed to parse name_id from {line}"))?;
+
         let professions = values
             .get(4)
             .map(|&v| v.split(',').map(|v| v.to_string()).collect::<Vec<_>>())
-            .unwrap();
+            .ok_or(format!("Failed to parse professions from {line}"))?;
 
         Ok(Self {
             name_id,
@@ -50,11 +54,13 @@ pub async fn parse_name_professions(
 
     let query = format!("INSERT INTO {table_name} VALUES($1, $2)");
 
-    for (i, name_profession) in reader.lines()
+    for (i, name_profession) in reader
+        .lines()
         .skip(1)
         .map(|l| l.map_err(|e| format!("Unable to read line -> {e}")))
         .map(|l| l.and_then(NameProfessions::from))
-        .enumerate() {
+        .enumerate()
+    {
         let name_profession = name_profession?;
         for profession in name_profession.professions.iter() {
             sqlx::query(&query)

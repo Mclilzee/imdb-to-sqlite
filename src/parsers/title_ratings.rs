@@ -15,13 +15,20 @@ struct TitleRating {
 impl TitleRating {
     fn from(line: String) -> Result<Self, String> {
         let values: Vec<&str> = line.split('\t').collect();
-        let title_id = values.first().unwrap()[2..]
-            .parse::<u32>()
-            .map_err(|e| format!("File line ''{line}'' contains wrong format => {e}"))?;
+        let title_id = values
+            .first()
+            .and_then(|s| s[2..].parse::<u32>().ok())
+            .ok_or(format!("Failed to parse title_id from {line}"))?;
 
-        let average_rating = values.get(1).unwrap().parse::<f32>().unwrap_or_default();
+        let average_rating = values
+            .get(1)
+            .and_then(|s| s.parse::<f32>().ok())
+            .ok_or(format!("Failed to parse average_rating from {line}"))?; // .unwrap_or_default()
 
-        let votes = values.get(2).unwrap().parse::<u32>().unwrap_or_default();
+        let votes = values
+            .get(2)
+            .and_then(|s| s.parse::<u32>().ok())
+            .ok_or(format!("Failed to parse votes from {line}"))?; //.unwrap_or_default();
 
         Ok(Self {
             title_id,
