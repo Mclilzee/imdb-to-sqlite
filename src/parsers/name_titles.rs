@@ -60,20 +60,11 @@ pub async fn parse_name_titles(
         .enumerate() {
         if let Ok(name_title) = name_title {
             for title in name_title.titles.iter() {
-                let result = sqlx::query(&query)
+                let _ = sqlx::query(&query)
                     .bind(name_title.name_id)
                     .bind(title)
                     .execute(&mut *tx)
-                    .await
-                    .map_err(|e| {
-                        format!(
-                            "Failed to insert {}, {} into {table_name} => {e}",
-                            name_title.name_id, title
-                        )
-                    });
-                if let Err(str) = result {
-                    println!("{str}");
-                }
+                    .await;
             }
         }
 
