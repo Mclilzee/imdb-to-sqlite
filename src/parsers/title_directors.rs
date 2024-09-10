@@ -62,17 +62,11 @@ pub async fn parse_title_directors(
         let title_directors = title_directors?;
         for name_id in title_directors.name_ids.iter() {
             let query = format!("INSERT INTO {table_name} VALUES($1, $2)");
-            sqlx::query(&query)
+            let _ = sqlx::query(&query)
                 .bind(title_directors.title_id)
                 .bind(name_id)
                 .execute(&mut *tx)
-                .await
-                .map_err(|e| {
-                    format!(
-                        "Failed to insert {}, {}, into {table_name} => {e}",
-                        title_directors.title_id, name_id,
-                    )
-                })?;
+                .await;
         }
         percentage_printer(i, count);
     }
