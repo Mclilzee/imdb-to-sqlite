@@ -1,6 +1,9 @@
-use std::{fs::File, io::{BufRead, BufReader, Seek}};
-use sqlx::{SqliteConnection, Connection};
 use crate::utils::percentage_printer;
+use sqlx::{Connection, SqliteConnection};
+use std::{
+    fs::File,
+    io::{BufRead, BufReader, Seek},
+};
 
 struct TitleGenres {
     title_id: u32,
@@ -10,34 +13,41 @@ struct TitleGenres {
 impl TitleGenres {
     fn from(line: String) -> Result<Self, String> {
         let values: Vec<&str> = line.split('\t').collect();
-        let title_id: u32 = values.first().unwrap()[2..].parse().unwrap();
+        let title_id: u32 = values
+            .first()
+            .and_then(|s| s.get(2..))
+            .and_then(|s| s.parse().ok())
+            .ok_or(format!("Failed to parse title_id from {line}"))?;
+
         let genres = values
             .get(8)
-            .ok_or(format!("Failed to extract genre for {title_id}"))
-            .map(|&v| v.split(',').map(|v| v.to_string()).collect())?;
+            .map(|&s| s.split(',').map(|s| s.to_string()).collect())
+            .ok_or(format!("Failed to extract genre for {title_id}"))?;
 
-        Ok(Self {
-            title_id,
-            genres,
-        })
+        Ok(Self { title_id, genres })
     }
 }
 
-pub async fn parse_title_genres(file_name: &str, table_name: &str, conn: &mut SqliteConnection) -> Result<(), String> {
+pub async fn parse_title_genres(
+    file_name: &str,
+    table_name: &str,
+    conn: &mut SqliteConnection,
+) -> Result<(), String> {
     println!("-- Inserting Into {table_name} --");
     create_table(table_name, conn).await?;
 
-    let file = File::open(file_name)
-        .map_err(|e| format!("Unable to read from {file_name} -> {e}"))?;
+    let file =
+        File::open(file_name).map_err(|e| format!("Unable to read from {file_name} -> {e}"))?;
     let mut reader = BufReader::new(file);
     let count = (&mut reader).lines().skip(1).count();
-    reader.rewind().map_err(|e| format!("Failed to read file {file_name} after counting => {e}"))?;
+    reader
+        .rewind()
+        .map_err(|e| format!("Failed to read file {file_name} after counting => {e}"))?;
 
     let mut tx = conn
         .begin()
         .await
         .map_err(|e| format!("Failed to start transaction => {e}"))?;
-
 
     for (i, title_genres) in reader
         .lines()
@@ -57,7 +67,7 @@ pub async fn parse_title_genres(file_name: &str, table_name: &str, conn: &mut Sq
                 .map_err(|e| {
                     format!(
                         "Failed to insert {}, {}, into {table_name} => {e}",
-                       title_genres.title_id, genre,
+                        title_genres.title_id, genre,
                     )
                 })?;
         }

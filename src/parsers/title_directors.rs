@@ -15,13 +15,18 @@ impl TitleDirectors {
         let values: Vec<&str> = line.split('\t').collect();
         let title_id = values
             .first()
-            .and_then(|&s| s[2..].parse::<u32>().ok())
+            .and_then(|&s| s.get(2..))
+            .and_then(|s| s.parse::<u32>().ok())
             .ok_or(format!("Failed to parse title_id from {line}"))?;
 
         let directors = values
             .get(1)
             .map(|&s| s.split(','))
-            .map(|s| s.flat_map(|v| v[2..].parse::<u32>()).collect::<Vec<u32>>())
+            .map(|s| {
+                s.filter_map(|v| v.get(2..))
+                    .filter_map(|s| s.parse::<u32>().ok())
+                    .collect::<Vec<u32>>()
+            })
             .ok_or(format!("Failed to parse directores from {line}"))?;
 
         Ok(Self {

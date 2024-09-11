@@ -17,12 +17,14 @@ impl TitleEpisode {
         let values: Vec<&str> = line.split('\t').collect();
         let title_episode_id: u32 = values
             .first()
-            .and_then(|s| s[2..].parse().ok())
+            .and_then(|s| s.get(2..))
+            .and_then(|s| s.parse().ok())
             .ok_or(format!("Failed to parse title_episode_id from {line}"))?;
 
         let title_series_id: u32 = values
             .get(1)
-            .and_then(|s| s[2..].parse().ok())
+            .and_then(|s| s.get(2..))
+            .and_then(|s| s.parse().ok())
             .ok_or(format!("Failed to parse title_series_id from {line}"))?;
 
         let season_number = values.get(2).and_then(|s| s.parse().ok());

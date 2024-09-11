@@ -16,7 +16,8 @@ impl NameProfessions {
         let values: Vec<&str> = line.split('\t').collect();
         let name_id: u32 = values
             .first()
-            .and_then(|s| s[2..].parse().ok())
+            .and_then(|s| s.get(2..))
+            .and_then(|s| s.parse().ok())
             .ok_or(format!("Failed to parse name_id from {line}"))?;
 
         let professions = values

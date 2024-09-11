@@ -16,7 +16,8 @@ impl NameTitles {
         let values: Vec<&str> = line.split('\t').collect();
         let name_id: u32 = values
             .first()
-            .and_then(|&s| s[2..].parse::<u32>().ok())
+            .and_then(|&s| s.get(2..))
+            .and_then(|s| s.parse::<u32>().ok())
             .ok_or(format!("Failed to parse name_id from {line}"))?;
 
         let titles = values

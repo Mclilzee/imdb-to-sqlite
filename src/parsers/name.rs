@@ -18,7 +18,8 @@ impl Name {
         let values: Vec<&str> = line.split('\t').collect();
         let id: u32 = values
             .first()
-            .and_then(|s| s[2..].parse().ok())
+            .and_then(|s| s.get(2..))
+            .and_then(|s| s.parse().ok())
             .ok_or(format!("Failed to parse id from {line}"))?;
 
         let name = values
