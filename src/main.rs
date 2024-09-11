@@ -62,9 +62,9 @@ async fn main() -> Result<(), String> {
     //    eprintln!("{str}");
     //}
 
-    if let Err(str) = title_writers::parse_title_writers(TITLE_CREW_FILE, TITLE_WRITERS_TABLE, &mut conn).await {
-        eprintln!("{str}");
-    }
+    //if let Err(str) = title_writers::parse_title_writers(TITLE_CREW_FILE, TITLE_WRITERS_TABLE, &mut conn).await {
+    //    eprintln!("{str}");
+    //}
 
     //if let Err(str) = title_episodes::parse_title_episodes(TITLE_EPISODE_FILE, TITLE_EPISODE_TABLE, &mut conn).await {
     //    eprintln!("{str}");
