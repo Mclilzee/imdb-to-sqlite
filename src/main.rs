@@ -31,31 +31,31 @@ async fn main() -> Result<(), String> {
         .map_err(|e| format!("Unable to connect to {path} -> {e}"))?;
 
     if let Err(str) = title::prase_titles(TITLE_BASICS_FILE, TITLE_TABLE, &mut conn).await {
-        println!("{str}");
+        eprintln!("{str}");
     }
 
     if let Err(str) = name::parse_names(NAME_BASICS_FILE, NAME_TABLE, &mut conn).await {
-        println!("{str}");
+        eprintln!("{str}");
     }
 
     if let Err(str) = name_titles::parse_name_titles(NAME_BASICS_FILE, NAME_TITLE_TABLE, &mut conn).await {
-        println!("{str}");
+        eprintln!("{str}");
     }
 
     if let Err(str) = title_genres::parse_title_genres(TITLE_BASICS_FILE, TITLE_GENRES_TABLE, &mut conn).await {
-        println!("{str}");
+        eprintln!("{str}");
     }
 
     if let Err(str) = title_ratings::parse_title_ratings(TITLE_RATING_FILE, TITLE_RATING_TABLE, &mut conn).await {
-        println!("{str}");
+        eprintln!("{str}");
     }
 
     if let Err(str) = name_professions::parse_name_professions(NAME_BASICS_FILE, NAME_PROFESSION_TABLE, &mut conn).await {
-        println!("{str}");
+        eprintln!("{str}");
     }
 
     if let Err(str) = title_directors::parse_title_directors(TITLE_CREW_FILE, TITLE_DIRECTORS_TABLE, &mut conn).await {
-        println!("{str}");
+        eprintln!("{str}");
     }
 
     println!("Finished Converting.");
