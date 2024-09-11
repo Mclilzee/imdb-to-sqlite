@@ -5,14 +5,13 @@ use std::{
     io::{BufRead, BufReader, Seek},
 };
 
-pub struct TitlePrincipal {
+pub struct TitleCharacters {
     title_id: u32,
     name_id: u32,
-    category: String,
-    job: Option<String>,
+    characters: Vec<String>,
 }
 
-impl TitlePrincipal {
+impl TitleCharacters {
     fn from(line: String) -> Result<Self, String> {
         let values: Vec<&str> = line.split('\t').collect();
         let title_id: u32 = values
@@ -27,22 +26,12 @@ impl TitlePrincipal {
             .and_then(|s| s.parse().ok())
             .ok_or(format!("Failed to parse name_id from {line}"))?;
 
-        let category = values
-            .get(3)
-            .filter(|&s| *s != "\\N")
-            .map(|&s| s.to_string().to_lowercase())
-            .ok_or(format!("Failed to parse category from {line}"))?;
-
-        let job = values
-            .get(4)
-            .filter(|&s| *s != "\\N")
-            .map(|&s| s.to_string().to_lowercase());
+        let characters: Vec<String> = values.get(3).filter(|s| s != "\\N").and_then(|s| s.replace("[", "").replace("]", "")))
 
         Ok(Self {
             title_id,
             name_id,
-            category,
-            job,
+            characters
         })
     }
 }
@@ -71,17 +60,16 @@ pub async fn parse_title_principals(
         .lines()
         .skip(1)
         .map(|l| l.map_err(|e| format!("Unable to read line -> {e}")))
-        .map(|l| l.and_then(TitlePrincipal::from))
+        .map(|l| l.and_then(TitleCharacter::from))
         .enumerate()
     {
         let title_principals = title_principals?;
 
-        let query = format!("INSERT INTO {table_name} VALUES($1, $2, $3, $4)");
+        let query = format!("INSERT INTO {table_name} VALUES($1, $2, $3)");
         let _ = sqlx::query(&query)
             .bind(title_principals.title_id)
             .bind(title_principals.name_id)
             .bind(&title_principals.category)
-            .bind(&title_principals.job)
             .execute(&mut *tx)
             .await;
 
@@ -97,7 +85,7 @@ pub async fn parse_title_principals(
 }
 
 async fn create_table(table_name: &str, conn: &mut SqliteConnection) -> Result<(), String> {
-    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {table_name} (title_id integer not null, name_id integer not null, category text not null, job text, foreign key(title_id) references title(id), foreign key(name_id) references name(id))").as_str())
+    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {table_name} (title_id integer not null, name_id integer not null, character text not null, foreign key(title_id) references title(id), foreign key(name_id) references name(id))").as_str())
         .execute(conn)
         .await.map_err(|e| format!("Unable to create {table_name} table -> {e}"))?;
 
