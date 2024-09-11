@@ -24,12 +24,12 @@ impl TitleRating {
         let average_rating = values
             .get(1)
             .and_then(|s| s.parse::<f32>().ok())
-            .ok_or(format!("Failed to parse average_rating from {line}"))?; // .unwrap_or_default()
+            .ok_or(format!("Failed to parse average_rating from {line}"))?;
 
         let votes = values
             .get(2)
             .and_then(|s| s.parse::<u32>().ok())
-            .ok_or(format!("Failed to parse votes from {line}"))?; //.unwrap_or_default();
+            .ok_or(format!("Failed to parse votes from {line}"))?;
 
         Ok(Self {
             title_id,

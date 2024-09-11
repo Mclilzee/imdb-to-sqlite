@@ -9,7 +9,7 @@ pub struct TitlePrincipal {
     title_id: u32,
     name_id: u32,
     category: String,
-    job: String,
+    job: Option<String>,
 }
 
 impl TitlePrincipal {
@@ -29,13 +29,14 @@ impl TitlePrincipal {
 
         let category = values
             .get(3)
+            .filter(|&s| *s != "\\N")
             .map(|&s| s.to_string().to_lowercase())
             .ok_or(format!("Failed to parse category from {line}"))?;
 
         let job = values
-            .get(3)
-            .map(|&s| s.to_string().to_lowercase())
-            .ok_or(format!("Failed to parse original_name from {line}"))?;
+            .get(4)
+            .filter(|&s| *s != "\\N")
+            .map(|&s| s.to_string().to_lowercase());
 
         Ok(Self {
             title_id,
@@ -74,23 +75,15 @@ pub async fn parse_title_principals(
         .enumerate()
     {
         let title_principals = title_principals?;
+
         let query = format!("INSERT INTO {table_name} VALUES($1, $2, $3, $4)");
-        sqlx::query(&query)
+        let _ = sqlx::query(&query)
             .bind(title_principals.title_id)
             .bind(title_principals.name_id)
             .bind(&title_principals.category)
             .bind(&title_principals.job)
             .execute(&mut *tx)
-            .await
-            .map_err(|e| {
-                format!(
-                    "Failed to insert {}, {}, {}, {} into {table_name} => {e}",
-                    title_principals.title_id,
-                    title_principals.name_id,
-                    title_principals.category,
-                    title_principals.job
-                )
-            })?;
+            .await;
 
         percentage_printer(i, count);
     }
