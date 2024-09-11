@@ -15,8 +15,8 @@ const TITLE_RATING_TABLE: &str = "title_rating";
 const TITLE_CREW_FILE: &str = "title.crew.tsv";
 const TITLE_DIRECTORS_TABLE: &str = "title_director";
 
-const TITLE_EPISODES_FILE: &str = "title.episodes.tsv";
-const TITLE_EPISODES_TABLE: &str = "title_episode";
+const TITLE_EPISODE_FILE: &str = "title.episode.tsv";
+const TITLE_EPISODE_TABLE: &str = "title_episode";
 
 const NAME_BASICS_FILE: &str = "name.basics.tsv";
 const NAME_TABLE: &str = "name";
@@ -61,7 +61,7 @@ async fn main() -> Result<(), String> {
     //    eprintln!("{str}");
     //}
 
-    if let Err(str) = title_episodes::parse_title_episodes(TITLE_EPISODES_FILE, TITLE_EPISODES_TABLE, &mut conn).await {
+    if let Err(str) = title_episodes::parse_title_episodes(TITLE_EPISODE_FILE, TITLE_EPISODE_TABLE, &mut conn).await {
         eprintln!("{str}");
     }
     println!("Finished Converting.");
