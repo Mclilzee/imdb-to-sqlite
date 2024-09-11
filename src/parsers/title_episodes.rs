@@ -6,8 +6,8 @@ use std::{
 };
 
 struct TitleEpisode {
-    id: u32,
-    series_id: u32,
+    title_episode_id: u32,
+    title_series_id: u32,
     season_number: Option<u32>,
     episode_number: Option<u32>,
 }
@@ -25,12 +25,12 @@ impl TitleEpisode {
             .and_then(|s| s[2..].parse().ok())
             .ok_or(format!("Failed to parse title_series_id from {line}"))?;
 
-        let season_number = values.get(2).and_then(|s| s[2..].parse().ok());
-        let episode_number = values.get(3).and_then(|s| s[2..].parse().ok());
+        let season_number = values.get(2).and_then(|s| s.parse().ok());
+        let episode_number = values.get(3).and_then(|s| s.parse().ok());
 
         Ok(Self {
-            id: title_episode_id,
-            series_id: title_series_id,
+            title_episode_id,
+            title_series_id,
             season_number,
             episode_number,
         })
@@ -68,8 +68,8 @@ pub async fn parse_title_episodes(
         let title_episode = title_episode?;
         let query = format!("INSERT INTO {table_name} VALUES($1, $2, $3, $4)");
         sqlx::query(&query)
-            .bind(title_episode.id)
-            .bind(title_episode.series_id)
+            .bind(title_episode.title_episode_id)
+            .bind(title_episode.title_series_id)
             .bind(title_episode.season_number)
             .bind(title_episode.episode_number)
             .execute(&mut *tx)
@@ -77,8 +77,8 @@ pub async fn parse_title_episodes(
             .map_err(|e| {
                 format!(
                     "Failed to insert {}, {}, {:?}, {:?}, into {table_name} => {e}",
-                    title_episode.id,
-                    title_episode.series_id,
+                    title_episode.title_episode_id,
+                    title_episode.title_series_id,
                     title_episode.episode_number,
                     title_episode.season_number
                 )
