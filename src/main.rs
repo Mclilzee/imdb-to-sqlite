@@ -14,6 +14,7 @@ const TITLE_RATING_TABLE: &str = "title_rating";
 
 const TITLE_CREW_FILE: &str = "title.crew.tsv";
 const TITLE_DIRECTORS_TABLE: &str = "title_director";
+const TITLE_WRITERS_TABLE: &str = "title_writer";
 
 const TITLE_EPISODE_FILE: &str = "title.episode.tsv";
 const TITLE_EPISODE_TABLE: &str = "title_episode";
@@ -61,9 +62,14 @@ async fn main() -> Result<(), String> {
     //    eprintln!("{str}");
     //}
 
+    if let Err(str) = title_writers::parse_title_writers(TITLE_CREW_FILE, TITLE_WRITERS_TABLE, &mut conn).await {
+        eprintln!("{str}");
+    }
+
     //if let Err(str) = title_episodes::parse_title_episodes(TITLE_EPISODE_FILE, TITLE_EPISODE_TABLE, &mut conn).await {
     //    eprintln!("{str}");
     //}
+
     println!("Finished Converting.");
     Ok(())
 }
