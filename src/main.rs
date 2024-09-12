@@ -37,49 +37,46 @@ async fn main() -> Result<(), String> {
     let mut conn = SqliteConnection::connect(path)
         .await
         .map_err(|e| format!("Unable to connect to {path} -> {e}"))?;
-    //
-    //if let Err(str) = title::prase_titles(TITLE_BASICS_FILE, TITLE_TABLE, &mut conn).await {
-    //    eprintln!("\n{str}");
-    //}
-    //
-    //if let Err(str) = name::parse_names(NAME_BASICS_FILE, NAME_TABLE, &mut conn).await {
-    //    eprintln!("\n{str}");
-    //}
-    //
-    //if let Err(str) = name_titles::parse_name_titles(NAME_BASICS_FILE, NAME_TITLE_TABLE, &mut conn).await {
-    //    eprintln!("\n{str}");
-    //}
-    //
-    //if let Err(str) = title_genres::parse_title_genres(TITLE_BASICS_FILE, TITLE_GENRES_TABLE, &mut conn).await {
-    //    eprintln!("\n{str}");
-    //}
-    //
-    //if let Err(str) = title_ratings::parse_title_ratings(TITLE_RATING_FILE, TITLE_RATING_TABLE, &mut conn).await {
-    //    eprintln!("\n{str}");
-    //}
-    //
-    //if let Err(str) = name_professions::parse_name_professions(NAME_BASICS_FILE, NAME_PROFESSION_TABLE, &mut conn).await {
-    //    eprintln!("\n{str}");
-    //}
-    //if let Err(str) = title_principals::parse_title_principals(TITLE_PRINCIPALS_FILE, TITLE_PRINCIPALS_TABLE, &mut conn).await {
-    //    eprintln!("\n{str}");
-    //}
 
+    if let Err(str) = titles::prase_titles(TITLE_BASICS_FILE, TITLE_TABLE, &mut conn).await {
+        eprintln!("\n{str}");
+    }
+
+    if let Err(str) = names::parse_names(NAME_BASICS_FILE, NAME_TABLE, &mut conn).await {
+        eprintln!("\n{str}");
+    }
+
+    if let Err(str) = name_titles::parse_name_titles(NAME_BASICS_FILE, NAME_TITLE_TABLE, &mut conn).await {
+        eprintln!("\n{str}");
+    }
+
+    if let Err(str) = title_genres::parse_title_genres(TITLE_BASICS_FILE, TITLE_GENRES_TABLE, &mut conn).await {
+        eprintln!("\n{str}");
+    }
+
+    if let Err(str) = title_ratings::parse_title_ratings(TITLE_RATING_FILE, TITLE_RATING_TABLE, &mut conn).await {
+        eprintln!("\n{str}");
+    }
+
+    if let Err(str) = name_professions::parse_name_professions(NAME_BASICS_FILE, NAME_PROFESSION_TABLE, &mut conn).await {
+        eprintln!("\n{str}");
+    }
+    if let Err(str) = title_principals::parse_title_principals(TITLE_PRINCIPALS_FILE, TITLE_PRINCIPALS_TABLE, &mut conn).await {
+        eprintln!("\n{str}");
+    }
     if let Err(str) =  title_characters::parse_title_characters(TITLE_PRINCIPALS_FILE, TITLE_CHARACTERS_TABLE, &mut conn).await {
         eprintln!("\n{str}");
     }
-    //
-    //if let Err(str) = title_directors::parse_title_directors(TITLE_CREW_FILE, TITLE_DIRECTORS_TABLE, &mut conn).await {
-    //    eprintln!("\n{str}");
-    //}
 
-    //if let Err(str) = title_writers::parse_title_writers(TITLE_CREW_FILE, TITLE_WRITERS_TABLE, &mut conn).await {
-    //    eprintln!("\n{str}");
-    //}
-
-    //if let Err(str) = title_episodes::parse_title_episodes(TITLE_EPISODE_FILE, TITLE_EPISODE_TABLE, &mut conn).await {
-    //    eprintln!("\n{str}");
-    //}
+    if let Err(str) = title_directors::parse_title_directors(TITLE_CREW_FILE, TITLE_DIRECTORS_TABLE, &mut conn).await {
+        eprintln!("\n{str}");
+    }
+    if let Err(str) = title_writers::parse_title_writers(TITLE_CREW_FILE, TITLE_WRITERS_TABLE, &mut conn).await {
+        eprintln!("\n{str}");
+    }
+    if let Err(str) = title_episodes::parse_title_episodes(TITLE_EPISODE_FILE, TITLE_EPISODE_TABLE, &mut conn).await {
+        eprintln!("\n{str}");
+    }
 
     println!("Finished Converting.");
     Ok(())
