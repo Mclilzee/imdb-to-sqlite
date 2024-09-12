@@ -1,4 +1,4 @@
-use crate::utils::percentage_printer;
+use crate::utils::{parse_sqlite_err, percentage_printer};
 use sqlx::{Connection, SqliteConnection};
 use std::{
     fs::File,
@@ -67,11 +67,18 @@ pub async fn parse_title_writers(
         let title_directors = title_directors?;
         for name_id in title_directors.name_ids.iter() {
             let query = format!("INSERT INTO {table_name} VALUES($1, $2)");
-            let _ = sqlx::query(&query)
+            let result = sqlx::query(&query)
                 .bind(title_directors.title_id)
                 .bind(name_id)
                 .execute(&mut *tx)
                 .await;
+
+            parse_sqlite_err(result, || {
+                format!(
+                    "Failed to insert {}, {} into {table_name}",
+                    title_directors.title_id, name_id
+                )
+            })?;
         }
         percentage_printer(i, count);
     }

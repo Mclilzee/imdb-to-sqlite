@@ -85,6 +85,7 @@ pub async fn parse_title_episodes(
                     title_episode.season_number
                 )
             })?;
+
         percentage_printer(i, count);
     }
     println!();

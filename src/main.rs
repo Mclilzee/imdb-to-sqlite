@@ -64,7 +64,7 @@ async fn main() -> Result<(), String> {
     if let Err(str) = title_principals::parse_title_principals(TITLE_PRINCIPALS_FILE, TITLE_PRINCIPALS_TABLE, &mut conn).await {
         eprintln!("\n{str}");
     }
-    if let Err(str) =  title_characters::parse_title_characters(TITLE_PRINCIPALS_FILE, TITLE_CHARACTERS_TABLE, &mut conn).await {
+    if let Err(str) = title_characters::parse_title_characters(TITLE_PRINCIPALS_FILE, TITLE_CHARACTERS_TABLE, &mut conn).await {
         eprintln!("\n{str}");
     }
 
