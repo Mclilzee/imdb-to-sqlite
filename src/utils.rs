@@ -21,6 +21,7 @@ pub fn percentage_printer(progress: usize, total: usize) {
 }
 
 pub fn find_strings(str: &str) -> Vec<String> {
+    println!("{str}");
     let mut cursor = 0;
     let chars = str.chars().collect::<Vec<char>>();
     let len = chars.len();
@@ -38,7 +39,8 @@ pub fn find_strings(str: &str) -> Vec<String> {
             cursor += 1;
         }
 
-        vec.push(str.get(start..cursor).unwrap().trim().to_string().replace("\\", ""));
+        let str: String = chars.get(start..cursor).into_iter().flatten().filter(|&c| *c != '\\').collect();
+        vec.push(str.trim().to_string());
         cursor += 1;
     }
 
@@ -66,6 +68,20 @@ mod test {
     fn test_finding_long_with_ands() {
         let result = find_strings("\"This is a long one\" , \"Another one\" and \"Yet Done \\\" rightly\"");
         let expected = vec!["This is a long one", "Another one", "Yet Done \" rightly"];
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn other_characters() {
+        let result = find_strings("[\"Georges Méliès\"]");
+        let expected = vec!["Georges Méliès"];
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn no_closing_quote() {
+        let result = find_strings("[\"Georges Méliès]");
+        let expected = vec!["Georges Méliès]"];
         assert_eq!(result, expected);
     }
 }
