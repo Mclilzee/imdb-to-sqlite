@@ -21,6 +21,7 @@ const TITLE_EPISODE_TABLE: &str = "title_episode";
 
 const TITLE_PRINCIPALS_FILE: &str = "title.principals.tsv";
 const TITLE_PRINCIPALS_TABLE: &str = "title_principal";
+const TITLE_CHARACTERS_TABLE: &str = "title_character";
 
 const NAME_BASICS_FILE: &str = "name.basics.tsv";
 const NAME_TABLE: &str = "name";
@@ -60,7 +61,11 @@ async fn main() -> Result<(), String> {
     //if let Err(str) = name_professions::parse_name_professions(NAME_BASICS_FILE, NAME_PROFESSION_TABLE, &mut conn).await {
     //    eprintln!("\n{str}");
     //}
-    if let Err(str) = title_principals::parse_title_principals(TITLE_PRINCIPALS_FILE, TITLE_PRINCIPALS_TABLE, &mut conn).await {
+    //if let Err(str) = title_principals::parse_title_principals(TITLE_PRINCIPALS_FILE, TITLE_PRINCIPALS_TABLE, &mut conn).await {
+    //    eprintln!("\n{str}");
+    //}
+
+    if let Err(str) =  title_characters::parse_title_characters(TITLE_PRINCIPALS_FILE, TITLE_CHARACTERS_TABLE, &mut conn).await {
         eprintln!("\n{str}");
     }
     //

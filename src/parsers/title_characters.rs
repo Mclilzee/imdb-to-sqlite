@@ -36,7 +36,7 @@ impl TitleCharacters {
     }
 }
 
-pub async fn parse_title_principals(
+pub async fn parse_title_characters(
     file_name: &str,
     table_name: &str,
     conn: &mut SqliteConnection,
