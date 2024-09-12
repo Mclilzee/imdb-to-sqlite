@@ -3,7 +3,7 @@ use std::{
     io::{BufRead, BufReader, Seek},
 };
 
-use crate::utils::percentage_printer;
+use crate::utils::{parse_sqlite_err, percentage_printer};
 use sqlx::{Connection, SqliteConnection};
 
 struct NameTitles {
@@ -61,11 +61,18 @@ pub async fn parse_name_titles(
     {
         if let Ok(name_title) = name_title {
             for title in name_title.titles.iter() {
-                let _ = sqlx::query(&query)
+                let result = sqlx::query(&query)
                     .bind(name_title.name_id)
                     .bind(title)
                     .execute(&mut *tx)
                     .await;
+
+                parse_sqlite_err(result, || {
+                    format!(
+                        "Failed to insert {}, {} into {table_name}",
+                        name_title.name_id, title
+                    )
+                })?;
             }
         }
 
