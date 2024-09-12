@@ -1,4 +1,4 @@
-use crate::utils::percentage_printer;
+use crate::utils::*;
 use sqlx::{Connection, SqliteConnection};
 use std::{
     fs::File,
@@ -26,12 +26,12 @@ impl TitleCharacters {
             .and_then(|s| s.parse().ok())
             .ok_or(format!("Failed to parse name_id from {line}"))?;
 
-        let characters: Vec<String> = values.get(3).filter(|s| s != "\\N").and_then(|s| s.replace("[", "").replace("]", "")))
+        let characters = values.get(3).map(|&s| find_strings(s)).unwrap_or_default();
 
         Ok(Self {
             title_id,
             name_id,
-            characters
+            characters,
         })
     }
 }
@@ -56,22 +56,29 @@ pub async fn parse_title_principals(
         .await
         .map_err(|e| format!("Failed to start transaction => {e}"))?;
 
-    for (i, title_principals) in reader
+    for (i, title_characters) in reader
         .lines()
         .skip(1)
         .map(|l| l.map_err(|e| format!("Unable to read line -> {e}")))
-        .map(|l| l.and_then(TitleCharacter::from))
+        .map(|l| l.and_then(TitleCharacters::from))
         .enumerate()
     {
-        let title_principals = title_principals?;
-
+        let title_characters = title_characters?;
         let query = format!("INSERT INTO {table_name} VALUES($1, $2, $3)");
-        let _ = sqlx::query(&query)
-            .bind(title_principals.title_id)
-            .bind(title_principals.name_id)
-            .bind(&title_principals.category)
-            .execute(&mut *tx)
-            .await;
+        for character in title_characters.characters {
+            let _ = sqlx::query(&query)
+                .bind(title_characters.title_id)
+                .bind(title_characters.name_id)
+                .bind(&character)
+                .execute(&mut *tx)
+                .await
+                .map_err(|e| {
+                    format!(
+                        "Failed to insert {}, {}, {} into {table_name} => {e}",
+                        title_characters.title_id, title_characters.name_id, character,
+                    )
+                })?;
+        }
 
         percentage_printer(i, count);
     }
