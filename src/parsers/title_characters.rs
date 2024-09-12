@@ -73,18 +73,12 @@ pub async fn parse_title_characters(
                 .execute(&mut *tx)
                 .await;
 
-            if let Err(error) = result {
-                if let Some(e) = error.as_database_error().and_then(|e| e.code()) {
-                    if e != "787" {
-                        return Err(format!(
-                            "Failed to insert {}, {}, {} into {table_name} => {error}",
-                            title_characters.title_id,
-                            title_characters.name_id,
-                            character,
-                        ));
-                    }
-                }
-            }
+            parse_sqlite_err(result, || {
+                format!(
+                    "Failed to insert {}, {}, {} into {table_name}",
+                    title_characters.title_id, title_characters.name_id, character,
+                )
+            })?;
         }
 
         percentage_printer(i, count);

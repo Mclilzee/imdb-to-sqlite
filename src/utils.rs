@@ -1,4 +1,5 @@
-use std::io::{stdout, Write};
+use std::{fmt::Display, io::{stdout, Write}};
+use sqlx::sqlite::SqliteQueryResult;
 
 pub fn percentage_printer(progress: usize, total: usize) {
     if progress % 10000 != 0 {
@@ -20,6 +21,18 @@ pub fn percentage_printer(progress: usize, total: usize) {
     stdout().flush().unwrap();
 }
 
+pub fn parse_sqlite_err(result: Result<SqliteQueryResult, sqlx::Error>, err_f: impl Fn() -> String) -> Result<(), String> {
+    if let Err(error) = result {
+        if let Some(e) = error.as_database_error().and_then(|e| e.code()) {
+            if e != "787" {
+                return Err(format!("{} => {error}", err_f()));
+            }
+        }
+    }
+
+    Ok(())
+}
+
 pub fn find_strings(str: &str) -> Vec<String> {
     let mut cursor = 0;
     let chars = str.chars().collect::<Vec<char>>();
@@ -38,7 +51,12 @@ pub fn find_strings(str: &str) -> Vec<String> {
             cursor += 1;
         }
 
-        let str: String = chars.get(start..cursor).into_iter().flatten().filter(|&c| *c != '\\').collect();
+        let str: String = chars
+            .get(start..cursor)
+            .into_iter()
+            .flatten()
+            .filter(|&c| *c != '\\')
+            .collect();
         vec.push(str.trim().to_string());
         cursor += 1;
     }
@@ -65,7 +83,8 @@ mod test {
 
     #[test]
     fn test_finding_long_with_ands() {
-        let result = find_strings("\"This is a long one\" , \"Another one\" and \"Yet Done \\\" rightly\"");
+        let result =
+            find_strings("\"This is a long one\" , \"Another one\" and \"Yet Done \\\" rightly\"");
         let expected = vec!["This is a long one", "Another one", "Yet Done \" rightly"];
         assert_eq!(result, expected);
     }
