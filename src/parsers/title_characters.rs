@@ -26,7 +26,7 @@ impl TitleCharacters {
             .and_then(|s| s.parse().ok())
             .ok_or(format!("Failed to parse name_id from {line}"))?;
 
-        let characters = values.get(3).map(|&s| find_strings(s)).unwrap_or_default();
+        let characters = values.get(5).map(|&s| find_strings(s)).unwrap_or_default();
 
         Ok(Self {
             title_id,
@@ -71,13 +71,7 @@ pub async fn parse_title_characters(
                 .bind(title_characters.name_id)
                 .bind(&character)
                 .execute(&mut *tx)
-                .await
-                .map_err(|e| {
-                    format!(
-                        "Failed to insert {}, {}, {} into {table_name} => {e}",
-                        title_characters.title_id, title_characters.name_id, character,
-                    )
-                })?;
+                .await;
         }
 
         percentage_printer(i, count);
