@@ -21,7 +21,6 @@ pub fn percentage_printer(progress: usize, total: usize) {
 }
 
 pub fn find_strings(str: &str) -> Vec<String> {
-    println!("{str}");
     let mut cursor = 0;
     let chars = str.chars().collect::<Vec<char>>();
     let len = chars.len();
