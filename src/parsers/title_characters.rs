@@ -66,12 +66,25 @@ pub async fn parse_title_characters(
         let title_characters = title_characters?;
         let query = format!("INSERT INTO {table_name} VALUES($1, $2, $3)");
         for character in title_characters.characters {
-            let _ = sqlx::query(&query)
+            let result = sqlx::query(&query)
                 .bind(title_characters.title_id)
                 .bind(title_characters.name_id)
                 .bind(&character)
                 .execute(&mut *tx)
                 .await;
+
+            if let Err(error) = result {
+                if let Some(e) = error.as_database_error().and_then(|e| e.code()) {
+                    if e != "787" {
+                        return Err(format!(
+                            "Failed to insert {}, {}, {} into {table_name} => {error}",
+                            title_characters.title_id,
+                            title_characters.name_id,
+                            character,
+                        ));
+                    }
+                }
+            }
         }
 
         percentage_printer(i, count);
