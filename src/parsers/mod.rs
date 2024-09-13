@@ -4,7 +4,7 @@ pub mod title_ratings;
 pub mod title_directors;
 pub mod title_episodes;
 pub mod title_writers;
-pub mod title_principals;
+pub mod title_jobs;
 pub mod title_characters;
 pub mod names;
 pub mod name_professions;

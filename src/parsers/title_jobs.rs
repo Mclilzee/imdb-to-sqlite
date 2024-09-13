@@ -47,7 +47,7 @@ impl TitlePrincipal {
     }
 }
 
-pub async fn parse_title_principals(
+pub async fn parse_title_jobs(
     file_name: &str,
     table_name: &str,
     conn: &mut SqliteConnection,
