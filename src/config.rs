@@ -38,7 +38,7 @@ pub struct Args {
     #[arg(short = 'e', long = "extra")]
     pub extra: bool,
 
-    /// Name option will toggle the name table parsing
+    /// Name option will toggle the name table parsing schema (id, name
     #[arg(long = "name")]
     pub name: bool,
 
@@ -54,21 +54,21 @@ pub struct Args {
     #[arg(long = "name_title")]
     pub name_title: bool,
 
-    /// Title_Rating option will toggle the name_title table parsing
-    #[arg(long = "title_rating")]
-    pub title_rating: bool,
-
     /// Title_Genre option will toggle the title_genre table parsing
     #[arg(long = "title_genre")]
     pub title_genre: bool,
 
-    /// Title_Writer option will toggle the title_writer table parsing
-    #[arg(long = "title_writer")]
-    pub title_writer: bool,
+    /// Title_Rating option will toggle the name_title table parsing
+    #[arg(long = "title_rating")]
+    pub title_rating: bool,
 
     /// Title_Director option will toggle the title_director table parsing
     #[arg(long = "title_director")]
     pub title_director: bool,
+
+    /// Title_Writer option will toggle the title_writer table parsing
+    #[arg(long = "title_writer")]
+    pub title_writer: bool,
 
     /// Title_Episode option will toggle the title_episode table parsing
     #[arg(long = "title_episode")]
