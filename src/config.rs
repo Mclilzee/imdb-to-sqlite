@@ -41,11 +41,15 @@ pub struct Args {
 
     /// Name option will toggle the name table parsing.
     ///
+    /// File required (name.bascis.tsv)
+    ///
     /// schema: (id PRIMARY KEY, name TEXT NOT NULL, birth_year INTEGER, death_year INTEGER)
     #[arg(long = "name")]
     pub name: bool,
 
     /// Name_Profession option will toggle the name_profession table parsing.
+    ///
+    /// File required (name.basics.tsv)
     ///
     /// schema: (name_id INTEGER NOT NULL, profession TEXT NOT NULL, FOREIGN KEY(name_id) REFERENCES name(id))
     #[arg(long = "name_profession")]
@@ -53,11 +57,15 @@ pub struct Args {
 
     /// Title option will toggle the title table parsing.
     ///
+    /// File required (title.basics.tsv)
+    ///
     /// schema: (id INTEGER PRIMARY KEY, primary_name TEXT NOT NULL, original_name TEXT NOT NULL, title_type TEXT NOT NULL, release_date INTEGER, end_date INTEGER)
     #[arg(long = "title")]
     pub title: bool,
 
     /// Name_Title option will toggle the name_title table parsing.
+    ///
+    /// File required (name.basics.tsv)
     ///
     /// schema: (name_id INTEGER NOT NULL, title_id INTEGER NOT NULL, FOREIGN KEY(name_id) REFERENCES name(id), FOREIGN KEY(title_id) REFERENCES title(id))
     #[arg(long = "name_title")]
@@ -65,11 +73,15 @@ pub struct Args {
 
     /// Title_Genre option will toggle the title_genre table parsing.
     ///
+    /// File required (title.basics.tsv)
+    ///
     /// schema: (title_id INTEGER NOT NULL, genre TEXT NOT NULL, FOREIGN KEY(title_id) REFERENCES title(id))
     #[arg(long = "title_genre")]
     pub title_genre: bool,
 
     /// Title_Rating option will toggle the name_title table parsing.
+    ///
+    /// File required (title.ratings.tsv)
     ///
     /// schema: (title_id INTEGER NOT NULL, average_rating REAL NOT NULL, votes INTEGER NOT NULL, FOREIGN KEY(title_id) REFERENCES title(id))
     #[arg(long = "title_rating")]
@@ -77,11 +89,15 @@ pub struct Args {
 
     /// Title_Director option will toggle the title_director table parsing.
     ///
+    /// File required (title.crew.tsv)
+    ///
     /// schema: (title_id INTEGER NOT NULL, name_id INTEGER NOT NULL, FOREIGN KEY(title_id) REFERENCES title(id), FOREIGN KEY(name_id) REFERENCES name(id))
     #[arg(long = "title_director")]
     pub title_director: bool,
 
     /// Title_Writer option will toggle the title_writer table parsing.
+    ///
+    /// File required (title.crew.tsv)
     ///
     /// schema: (title_id NOT NULL, name_id INTEGER NOT NULL, FOREIGN KEY(title_id) REFERENCES title(id), FOREIGN KEY(name_id) REFERENCES name(id))
     #[arg(long = "title_writer")]
@@ -89,17 +105,23 @@ pub struct Args {
 
     /// Title_Episode option will toggle the title_episode table parsing.
     ///
+    /// File required (title.episode.tsv)
+    ///
     /// schema: (title_episode_id INTEGER NOT NULL, title_series_id INTEGER NOT NULL, episode_number INTEGER, season_number INTEGER, FOREIGN KEY(title_episode_id) REFERNECES title(id), FOREIGN KEY(title_series_id) REFERENCES title(id))
     #[arg(long = "title_episode")]
     pub title_episode: bool,
 
     /// Title_Job option will toggle the title_job table parsing.
     ///
+    /// File required (title.principals.tsv)
+    ///
     /// schema: (title_id INTEGER NOT NULL, name_id INTEGER NOT NULL, category TEXT NOT NULL, job TEXT, FOREIGN KEY(title_id) REFERENCES title(id), FOREIGN KEY(name_id) REFERENCES name(id))
     #[arg(long = "title_job")]
     pub title_job: bool,
 
     /// Title_Character option will toggle the title_character table parsing.
+    ///
+    /// File required (title.principals.tsv)
     ///
     /// schema: (title_id INTEGER NOT NULL, name_id INTEGER NOT NULL, character TEXT TEXT NOT NULL, FOREIGN KEY(title_id) REFERENCESE title(id), FOREIGN KEY(name_id) REFERENCES name(id))
     #[arg(long = "title_character")]
