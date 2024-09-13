@@ -37,10 +37,10 @@ pub struct Args {
     #[arg(short = 'c', long = "core")]
     pub core: bool,
 
-    /// Full option will toggle all the tables except the slowest ones which are(title_job, title_character)
+    /// All option will toggle all the tables except the slowest ones (not really all but almost all) which are (title_job, title_character)
     ///
     /// Files required (title.basics.tsv, title.ratings.tsv, title.crew.tsv, title.episode.tsv, name.basics.tsv)
-    #[arg(short = 'f', long = "full")]
+    #[arg(short = 'a', long = "all")]
     pub full: bool,
 
     /// Extra option will toggle the extra tables which are the slowest and will take a long time to parse, (title_job, title_character)
