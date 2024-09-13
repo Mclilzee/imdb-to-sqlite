@@ -28,14 +28,20 @@ pub struct Args {
     pub lite: bool,
 
     /// Core option will toggle the two core tables, (title, name)
+    ///
+    /// Files required (title.basics.tsv, name.basics.tsv)
     #[arg(short = 'c', long = "core")]
     pub core: bool,
 
-    /// Full option will toggle all the tables except the slowest ones, (title_principal, title_character, title_locale)
+    /// Full option will toggle all the tables except the slowest ones which are(title_job, title_character)
+    ///
+    /// Files required (title.basics.tsv, title.ratings.tsv, title.crew.tsv, title.episode.tsv, name.basics.tsv)
     #[arg(short = 'f', long = "full")]
     pub full: bool,
 
-    /// Extra option will toggle the extra tables which are the slowest and will take a long time to parse, (title_job, title_character, title_locale)
+    /// Extra option will toggle the extra tables which are the slowest and will take a long time to parse, (title_job, title_character)
+    ///
+    /// files required (title.principals.tsv)
     #[arg(short = 'e', long = "extra")]
     pub extra: bool,
 
