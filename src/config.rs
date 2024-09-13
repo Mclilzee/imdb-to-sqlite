@@ -42,7 +42,7 @@ pub struct Args {
     #[arg(long = "name")]
     pub name: bool,
 
-    /// Name_Profession option will toggle the name_profession table parsing.
+    /// Name_Profession option will toggle the name_profession table parsing. schema: 'CREATE TABLE name_profession (name_id INTEGER NOT NULL, profession TEXT NOT NULL, FOREIGN KEY(name_id) REFERENCES name(id))'
     #[arg(long = "name_profession")]
     pub name_profession: bool,
 
