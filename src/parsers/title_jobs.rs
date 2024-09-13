@@ -1,7 +1,4 @@
-use crate::{
-    config::Args,
-    utils::{parse_sqlite_err, percentage_printer},
-};
+use crate::{config::Args, utils::percentage_printer};
 use sqlx::{Connection, SqliteConnection};
 use std::{
     fs::File,

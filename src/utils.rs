@@ -1,4 +1,3 @@
-use sqlx::sqlite::SqliteQueryResult;
 use std::io::{stdout, Write};
 
 pub fn percentage_printer(progress: usize, total: usize) {
@@ -19,21 +18,6 @@ pub fn percentage_printer(progress: usize, total: usize) {
 
     print!("] {:02}%", u8::min(n, 100));
     stdout().flush().unwrap();
-}
-
-pub fn parse_sqlite_err(
-    result: Result<SqliteQueryResult, sqlx::Error>,
-    err_f: impl Fn() -> String,
-) -> Result<(), String> {
-    if let Err(error) = result {
-        if let Some(e) = error.as_database_error().and_then(|e| e.code()) {
-            if e != "787" {
-                return Err(format!("{} => {error}", err_f()));
-            }
-        }
-    }
-
-    Ok(())
 }
 
 pub fn find_strings(str: &str) -> Vec<String> {

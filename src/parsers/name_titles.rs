@@ -1,13 +1,9 @@
+use crate::{config::Args, utils::percentage_printer};
+use sqlx::{Connection, SqliteConnection};
 use std::{
     fs::File,
     io::{BufRead, BufReader, Seek},
 };
-
-use crate::{
-    config::Args,
-    utils::{parse_sqlite_err, percentage_printer},
-};
-use sqlx::{Connection, SqliteConnection};
 
 struct NameTitles {
     name_id: u32,
