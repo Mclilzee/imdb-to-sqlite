@@ -38,11 +38,11 @@ pub struct Args {
     #[arg(short = 'e', long = "extra")]
     pub extra: bool,
 
-    /// Name option will toggle the name table parsing schema (id, name
+    /// Name option will toggle the name table parsing. schema: 'CREATE TABLE name (id PRIMARY KEY, name TEXT NOT NULL, birth_year INTEGER, death_year INTEGER)'
     #[arg(long = "name")]
     pub name: bool,
 
-    /// Name_Profession option will toggle the name_profession table parsing
+    /// Name_Profession option will toggle the name_profession table parsing.
     #[arg(long = "name_profession")]
     pub name_profession: bool,
 
