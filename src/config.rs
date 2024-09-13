@@ -79,6 +79,6 @@ pub struct Args {
     pub title_job: bool,
 
     /// Title_Character option will toggle the title_character table parsing
-    #[arg(long = "title_job")]
+    #[arg(long = "title_character")]
     pub title_character: bool,
 }
