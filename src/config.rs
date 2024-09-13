@@ -23,7 +23,7 @@ pub struct Args {
     #[arg(long = "log")]
     pub log: bool,
 
-    /// Overwrite option will erase all the content in the file. Only choose it if you want to do a fresh conversion otherwise all the old ones will be replaced.
+    /// Overwrite option will the tables before being inserted into. Will only erase the tables that are toggle through the table flags.
     #[arg(short = 'O', long = "overwrite")]
     pub overwrite: bool,
 
