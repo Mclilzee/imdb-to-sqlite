@@ -99,9 +99,9 @@ async fn create_table(
     overwrite: bool,
 ) -> Result<(), String> {
     if overwrite {
-        let _ = sqlx::raw_sql(format!("DROP TABLE {table_name} (name_id integer not null, title_id integer not null, foreign key(name_id) references name(id), foreign key(title_id) references title(id))").as_str())
-        .execute(&mut *conn)
-        .await;
+        let _ = sqlx::raw_sql(format!("DROP TABLE {table_name}").as_str())
+            .execute(&mut *conn)
+            .await;
     }
 
     sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {table_name} (name_id integer not null, title_id integer not null, foreign key(name_id) references name(id), foreign key(title_id) references title(id))").as_str())
