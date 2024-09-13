@@ -20,6 +20,7 @@ pub struct Args {
     pub path: String,
 
     /// Log option to show insertion errors, examples: Insertion errors due to forgein key constraint, or primary key already exists. By default those errors are skiped and not printed out.
+    #[arg(long = "log")]
     pub log: bool,
 
     /// Overwrite option will erase all the content in the file. Only choose it if you want to do a fresh conversion otherwise all the old ones will be replaced.

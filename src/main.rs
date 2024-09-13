@@ -34,7 +34,7 @@ const NAME_TITLE_TABLE: &str = "name_title";
 #[tokio::main]
 async fn main() -> Result<(), String> {
     let args = Args::parse();
-    if !Path::new(&args.path).exists() || args.overwrite {
+    if !Path::new(&args.path).exists() {
         File::create(&args.path)
             .map_err(|e| format!("Failed to create file {} => {e}", args.path))?;
     }
@@ -44,7 +44,7 @@ async fn main() -> Result<(), String> {
         .map_err(|e| format!("Unable to connect to {} -> {e}", args.path))?;
 
     if args.full || args.lite || args.core || args.name {
-        if let Err(str) = names::parse_names(NAME_BASICS_FILE, NAME_TABLE, &mut conn, args.log).await {
+        if let Err(str) = names::parse_names(NAME_BASICS_FILE, NAME_TABLE, &mut conn, &args).await {
             eprintln!("\n{str}");
         }
     }
@@ -54,7 +54,7 @@ async fn main() -> Result<(), String> {
             NAME_BASICS_FILE,
             NAME_PROFESSION_TABLE,
             &mut conn,
-            args.log
+            &args,
         )
         .await
         {
@@ -63,31 +63,43 @@ async fn main() -> Result<(), String> {
     }
 
     if args.full || args.lite || args.core || args.title {
-        if let Err(str) = titles::prase_titles(TITLE_BASICS_FILE, TITLE_TABLE, &mut conn, args.log).await {
+        if let Err(str) =
+            titles::prase_titles(TITLE_BASICS_FILE, TITLE_TABLE, &mut conn, &args).await
+        {
             eprintln!("\n{str}");
         }
     }
 
     if args.full || args.lite || args.name_title {
         if let Err(str) =
-            name_titles::parse_name_titles(NAME_BASICS_FILE, NAME_TITLE_TABLE, &mut conn, args.log).await
+            name_titles::parse_name_titles(NAME_BASICS_FILE, NAME_TITLE_TABLE, &mut conn, &args)
+                .await
         {
             eprintln!("\n{str}");
         }
     }
 
     if args.full || args.title_genre {
-        if let Err(str) =
-            title_genres::parse_title_genres(TITLE_BASICS_FILE, TITLE_GENRES_TABLE, &mut conn, args.log).await
+        if let Err(str) = title_genres::parse_title_genres(
+            TITLE_BASICS_FILE,
+            TITLE_GENRES_TABLE,
+            &mut conn,
+            &args,
+        )
+        .await
         {
             eprintln!("\n{str}");
         }
     }
 
     if args.full || args.title_rating {
-        if let Err(str) =
-            title_ratings::parse_title_ratings(TITLE_RATING_FILE, TITLE_RATING_TABLE, &mut conn, args.log)
-                .await
+        if let Err(str) = title_ratings::parse_title_ratings(
+            TITLE_RATING_FILE,
+            TITLE_RATING_TABLE,
+            &mut conn,
+            &args,
+        )
+        .await
         {
             eprintln!("\n{str}");
         }
@@ -98,7 +110,7 @@ async fn main() -> Result<(), String> {
             TITLE_CREW_FILE,
             TITLE_DIRECTORS_TABLE,
             &mut conn,
-            args.log
+            &args,
         )
         .await
         {
@@ -107,18 +119,26 @@ async fn main() -> Result<(), String> {
     }
 
     if args.full || args.title_writer {
-        if let Err(str) =
-            title_writers::parse_title_writers(TITLE_CREW_FILE, TITLE_WRITERS_TABLE, &mut conn, args.log)
-                .await
+        if let Err(str) = title_writers::parse_title_writers(
+            TITLE_CREW_FILE,
+            TITLE_WRITERS_TABLE,
+            &mut conn,
+            &args,
+        )
+        .await
         {
             eprintln!("\n{str}");
         }
     }
 
     if args.full || args.title_episode {
-        if let Err(str) =
-            title_episodes::parse_title_episodes(TITLE_EPISODE_FILE, TITLE_EPISODE_TABLE, &mut conn, args.log)
-                .await
+        if let Err(str) = title_episodes::parse_title_episodes(
+            TITLE_EPISODE_FILE,
+            TITLE_EPISODE_TABLE,
+            &mut conn,
+            &args,
+        )
+        .await
         {
             eprintln!("\n{str}");
         }
@@ -126,7 +146,8 @@ async fn main() -> Result<(), String> {
 
     if args.extra || args.title_job {
         if let Err(str) =
-            title_jobs::parse_title_jobs(TITLE_PRINCIPALS_FILE, TITLE_JOB_TABLE, &mut conn, args.log).await
+            title_jobs::parse_title_jobs(TITLE_PRINCIPALS_FILE, TITLE_JOB_TABLE, &mut conn, &args)
+                .await
         {
             eprintln!("\n{str}");
         }
@@ -137,7 +158,7 @@ async fn main() -> Result<(), String> {
             TITLE_PRINCIPALS_FILE,
             TITLE_CHARACTERS_TABLE,
             &mut conn,
-            args.log
+            &args,
         )
         .await
         {

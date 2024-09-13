@@ -3,7 +3,7 @@ use std::{
     io::{BufRead, BufReader, Seek},
 };
 
-use crate::utils::percentage_printer;
+use crate::{config::Args, utils::percentage_printer};
 use sqlx::{Connection, SqliteConnection};
 
 struct TitleRating {
@@ -43,10 +43,10 @@ pub async fn parse_title_ratings(
     file_name: &str,
     table_name: &str,
     conn: &mut SqliteConnection,
-    log: bool,
+    args: &Args,
 ) -> Result<(), String> {
     println!("-- Inserting Into {table_name} --");
-    create_table(table_name, conn).await?;
+    create_table(table_name, conn, args.overwrite).await?;
     let file =
         File::open(file_name).map_err(|e| format!("Unable to read from {file_name} -> {e}"))?;
     let mut reader = BufReader::new(file);
@@ -69,19 +69,17 @@ pub async fn parse_title_ratings(
     {
         let query = format!("INSERT INTO {table_name} VALUES($1, $2, $3)");
         let title_rating = title_rating?;
-        sqlx::query(&query)
+        let _ = sqlx::query(&query)
             .bind(title_rating.title_id)
             .bind(title_rating.average_rating)
             .bind(title_rating.votes)
             .execute(&mut *tx)
             .await
             .inspect_err(|e| {
-                if log {
+                if args.log {
                     eprintln!(
                         "Failed to insert {}, {}, {} into {table_name} => {e}",
-                        title_rating.title_id,
-                        title_rating.average_rating,
-                        title_rating.votes,
+                        title_rating.title_id, title_rating.average_rating, title_rating.votes,
                     );
                 }
             });
@@ -96,12 +94,20 @@ pub async fn parse_title_ratings(
     Ok(())
 }
 
-async fn create_table(table_name: &str, conn: &mut SqliteConnection) -> Result<(), String> {
-    let query = format!(
+async fn create_table(
+    table_name: &str,
+    conn: &mut SqliteConnection,
+    overwrite: bool,
+) -> Result<(), String> {
+    if overwrite {
+        sqlx::raw_sql(format!("DROP TABLE {table_name}").as_str())
+            .execute(&mut *conn)
+            .await
+            .map_err(|e| format!("Unable to create {table_name} table -> {e}"))?;
+    }
+    sqlx::raw_sql(format!(
             "CREATE TABLE IF NOT EXISTS {table_name} (title_id integer not null, average_rating real not null, votes integer not null, foreign key(title_id) references title(id))",
-        );
-
-    sqlx::raw_sql(&query)
+        ).as_str())
         .execute(conn)
         .await
         .map_err(|e| format!("Unable to create {table_name} table -> {e}"))?;

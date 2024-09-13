@@ -1,4 +1,4 @@
-use crate::utils::percentage_printer;
+use crate::{config::Args, utils::percentage_printer};
 use sqlx::{Connection, SqliteConnection};
 use std::{
     fs::File,
@@ -43,10 +43,10 @@ pub async fn parse_title_episodes(
     file_name: &str,
     table_name: &str,
     conn: &mut SqliteConnection,
-    log: bool,
+    args: &Args,
 ) -> Result<(), String> {
     println!("-- Inserting Into {table_name} --");
-    create_table(table_name, conn).await?;
+    create_table(table_name, conn, args.overwrite).await?;
 
     let file =
         File::open(file_name).map_err(|e| format!("Unable to read from {file_name} -> {e}"))?;
@@ -78,7 +78,7 @@ pub async fn parse_title_episodes(
             .execute(&mut *tx)
             .await
             .inspect_err(|e| {
-                if log {
+                if args.log {
                     eprintln!(
                         "Failed to insert {}, {}, {:?}, {:?}, into {table_name} => {e}",
                         title_episode.title_episode_id,
@@ -100,7 +100,17 @@ pub async fn parse_title_episodes(
     Ok(())
 }
 
-async fn create_table(table_name: &str, conn: &mut SqliteConnection) -> Result<(), String> {
+async fn create_table(
+    table_name: &str,
+    conn: &mut SqliteConnection,
+    overwrite: bool,
+) -> Result<(), String> {
+    if overwrite {
+        sqlx::raw_sql(format!("DROP TABLE {table_name}").as_str())
+            .execute(&mut *conn)
+            .await
+            .map_err(|e| format!("Unable to create {table_name} table -> {e}"))?;
+    }
     sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {table_name} (title_episode_id integer not null, title_series_id integer not null, episode_number integer, season_number integer, foreign key(title_episode_id) references title(id), foreign key(title_series_id) references title(id))").as_str())
         .execute(conn)
         .await.map_err(|e| format!("Unable to create {table_name} table -> {e}"))?;

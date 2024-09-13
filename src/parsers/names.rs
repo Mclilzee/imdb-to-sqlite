@@ -3,7 +3,7 @@ use std::{
     io::{BufRead, BufReader, Seek},
 };
 
-use crate::utils::percentage_printer;
+use crate::{config::Args, utils::percentage_printer};
 use sqlx::{Connection, SqliteConnection};
 
 pub struct Name {
@@ -43,10 +43,10 @@ pub async fn parse_names(
     file_name: &str,
     table_name: &str,
     conn: &mut SqliteConnection,
-    log: bool,
+    args: &Args,
 ) -> Result<(), String> {
     println!("-- Inserting Into {table_name} --");
-    create_table(table_name, conn).await?;
+    create_table(table_name, conn, args.overwrite).await?;
 
     let file =
         File::open(file_name).map_err(|e| format!("Unable to read from {file_name} -> {e}"))?;
@@ -78,7 +78,7 @@ pub async fn parse_names(
             .execute(&mut *tx)
             .await
             .map_err(|e| {
-                if log {
+                if args.log {
                     eprintln!(
                         "Failed to insert {}, {}, {:?}, {:?} into {table_name} => {e}",
                         name.id, name.name, name.birth_date, name.death_date
@@ -97,7 +97,18 @@ pub async fn parse_names(
     Ok(())
 }
 
-async fn create_table(table_name: &str, conn: &mut SqliteConnection) -> Result<(), String> {
+async fn create_table(
+    table_name: &str,
+    conn: &mut SqliteConnection,
+    overwrite: bool,
+) -> Result<(), String> {
+
+    if overwrite {
+        sqlx::raw_sql(format!("DROP TABLE {table_name}").as_str())
+        .execute(&mut *conn)
+        .await.map_err(|e| format!("Unable to create {table_name} table -> {e}"))?;
+    }
+
     sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {table_name} (id integer primary key, name text not null, birth_year integer, death_year integer)").as_str())
         .execute(conn)
         .await.map_err(|e| format!("Unable to create {table_name} table -> {e}"))?;
