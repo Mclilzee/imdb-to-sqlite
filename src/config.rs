@@ -38,15 +38,15 @@ pub struct Args {
     #[arg(short = 'e', long = "extra")]
     pub extra: bool,
 
-    /// Name option will toggle the name table parsing. schema: 'CREATE TABLE name (id PRIMARY KEY, name TEXT NOT NULL, birth_year INTEGER, death_year INTEGER)'
+    /// Name option will toggle the name table parsing. schema: (id PRIMARY KEY, name TEXT NOT NULL, birth_year INTEGER, death_year INTEGER)
     #[arg(long = "name")]
     pub name: bool,
 
-    /// Name_Profession option will toggle the name_profession table parsing. schema: 'CREATE TABLE name_profession (name_id INTEGER NOT NULL, profession TEXT NOT NULL, FOREIGN KEY(name_id) REFERENCES name(id))'
+    /// Name_Profession option will toggle the name_profession table parsing. schema: (name_id INTEGER NOT NULL, profession TEXT NOT NULL, FOREIGN KEY(name_id) REFERENCES name(id))
     #[arg(long = "name_profession")]
     pub name_profession: bool,
 
-    /// Title option will toggle the title table parsing
+    /// Title option will toggle the title table parsing. schema: (id INTEGER PRIMARY KEY, primary_name TEXT NOT NULL, original_name TEXT NOT NULL, title_type TEXT NOT NULL, release_date INTEGER, end_date INTEGER)
     #[arg(long = "title")]
     pub title: bool,
 
