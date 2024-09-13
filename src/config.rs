@@ -54,15 +54,15 @@ pub struct Args {
     #[arg(long = "name_title")]
     pub name_title: bool,
 
-    /// Title_Genre option will toggle the title_genre table parsing
+    /// Title_Genre option will toggle the title_genre table parsing. schema: (title_id INTEGER NOT NULL, genre TEXT NOT NULL, FOREIGN KEY(title_id) REFERENCES title(id))
     #[arg(long = "title_genre")]
     pub title_genre: bool,
 
-    /// Title_Rating option will toggle the name_title table parsing
+    /// Title_Rating option will toggle the name_title table parsing. schema: (title_id INTEGER NOT NULL, average_rating REAL NOT NULL, votes INTEGER NOT NULL, FOREIGN KEY(title_id) REFERENCES title(id))
     #[arg(long = "title_rating")]
     pub title_rating: bool,
 
-    /// Title_Director option will toggle the title_director table parsing
+    /// Title_Director option will toggle the title_director table parsing. schema: (title_id INTEGER NOT NULL, name_id INTEGER NOT NULL, FOREIGN KEY(title_id) REFERENCES title(id), FOREIGN KEY(name_id) REFERENCES name(id))
     #[arg(long = "title_director")]
     pub title_director: bool,
 
