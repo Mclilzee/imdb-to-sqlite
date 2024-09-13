@@ -96,7 +96,7 @@ pub async fn prase_titles(
             .map_err(|e| {
                 if args.log {
                     eprintln!(
-                        "Failed to insert {}, {}, {}, {}, {:?}, {:?} into {table_name} => {e}",
+                        "\nFailed to insert {}, {}, {}, {}, {:?}, {:?} into {table_name} => {e}",
                         title.id,
                         title.primary_name,
                         title.original_name,

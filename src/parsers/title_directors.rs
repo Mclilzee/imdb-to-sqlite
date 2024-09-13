@@ -77,7 +77,7 @@ pub async fn parse_title_directors(
                 .inspect_err(|e| {
                     if args.log {
                         eprintln!(
-                            "Failed to insert {}, {} into {table_name} => {e}",
+                            "\nFailed to insert {}, {} into {table_name} => {e}",
                             title_directors.title_id, name_id
                         );
                     }

@@ -93,7 +93,7 @@ pub async fn parse_title_jobs(
             .inspect_err(|e| {
                 if args.log {
                     eprintln!(
-                        "Failed to insert {}, {}, {}, {:?} into {table_name} => {e}",
+                        "\nFailed to insert {}, {}, {}, {:?} into {table_name} => {e}",
                         title_principals.title_id,
                         title_principals.name_id,
                         title_principals.category,

@@ -75,7 +75,7 @@ pub async fn parse_name_professions(
                 .map_err(|e| {
                     if args.log {
                         eprintln!(
-                            "Failed to insert {}, {} into {table_name} => {e}",
+                            "\nFailed to insert {}, {} into {table_name} => {e}",
                             name_profession.name_id, profession
                         );
                     }

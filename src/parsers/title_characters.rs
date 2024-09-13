@@ -78,7 +78,7 @@ pub async fn parse_title_characters(
                 .inspect_err(|e| {
                     if args.log {
                         eprintln!(
-                            "Failed to insert {}, {}, {} into {table_name} => {e}",
+                            "\nFailed to insert {}, {}, {} into {table_name} => {e}",
                             title_characters.title_id, title_characters.name_id, character,
                         );
                     }

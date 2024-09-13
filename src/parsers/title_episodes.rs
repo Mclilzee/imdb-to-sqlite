@@ -81,7 +81,7 @@ pub async fn parse_title_episodes(
             .inspect_err(|e| {
                 if args.log {
                     eprintln!(
-                        "Failed to insert {}, {}, {:?}, {:?}, into {table_name} => {e}",
+                        "\nFailed to insert {}, {}, {:?}, {:?}, into {table_name} => {e}",
                         title_episode.title_episode_id,
                         title_episode.title_series_id,
                         title_episode.episode_number,

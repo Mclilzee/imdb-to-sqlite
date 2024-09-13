@@ -80,7 +80,7 @@ pub async fn parse_title_ratings(
             .inspect_err(|e| {
                 if args.log {
                     eprintln!(
-                        "Failed to insert {}, {}, {} into {table_name} => {e}",
+                        "\nFailed to insert {}, {}, {} into {table_name} => {e}",
                         title_rating.title_id, title_rating.average_rating, title_rating.votes,
                     );
                 }

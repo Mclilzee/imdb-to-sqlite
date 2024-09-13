@@ -69,7 +69,7 @@ pub async fn parse_title_genres(
                 .inspect_err(|e| {
                     if args.log {
                         eprintln!(
-                            "Failed to insert {}, {}, into {table_name} => {e}",
+                            "\nFailed to insert {}, {}, into {table_name} => {e}",
                             title_genres.title_id, genre,
                         );
                     }

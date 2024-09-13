@@ -80,7 +80,7 @@ pub async fn parse_names(
             .map_err(|e| {
                 if args.log {
                     eprintln!(
-                        "Failed to insert {}, {}, {:?}, {:?} into {table_name} => {e}",
+                        "\nFailed to insert {}, {}, {:?}, {:?} into {table_name} => {e}",
                         name.id, name.name, name.birth_date, name.death_date
                     );
                 }
