@@ -34,7 +34,7 @@ pub struct Args {
     #[arg(short = 'f', long = "full")]
     pub full: bool,
 
-    /// Extra option will toggle the extra tables which are the slowest and will take a long time to parse, (title_principal, title_character, title_locale)
+    /// Extra option will toggle the extra tables which are the slowest and will take a long time to parse, (title_job, title_character, title_locale)
     #[arg(short = 'e', long = "extra")]
     pub extra: bool,
 
