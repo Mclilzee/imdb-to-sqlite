@@ -43,14 +43,26 @@ async fn main() -> Result<(), String> {
         .await
         .map_err(|e| format!("Unable to connect to {} -> {e}", args.path))?;
 
-    if args.full || args.lite || args.core || args.title {
-        if let Err(str) = titles::prase_titles(TITLE_BASICS_FILE, TITLE_TABLE, &mut conn).await {
+    if args.full || args.lite || args.core || args.name {
+        if let Err(str) = names::parse_names(NAME_BASICS_FILE, NAME_TABLE, &mut conn).await {
             eprintln!("\n{str}");
         }
     }
 
-    if args.full || args.lite || args.core || args.name {
-        if let Err(str) = names::parse_names(NAME_BASICS_FILE, NAME_TABLE, &mut conn).await {
+    if args.full || args.name_profession {
+        if let Err(str) = name_professions::parse_name_professions(
+            NAME_BASICS_FILE,
+            NAME_PROFESSION_TABLE,
+            &mut conn,
+        )
+        .await
+        {
+            eprintln!("\n{str}");
+        }
+    }
+
+    if args.full || args.lite || args.core || args.title {
+        if let Err(str) = titles::prase_titles(TITLE_BASICS_FILE, TITLE_TABLE, &mut conn).await {
             eprintln!("\n{str}");
         }
     }
@@ -80,17 +92,6 @@ async fn main() -> Result<(), String> {
         }
     }
 
-    if args.full || args.name_profession {
-        if let Err(str) = name_professions::parse_name_professions(
-            NAME_BASICS_FILE,
-            NAME_PROFESSION_TABLE,
-            &mut conn,
-        )
-        .await
-        {
-            eprintln!("\n{str}");
-        }
-    }
     if args.full || args.title_director {
         if let Err(str) = title_directors::parse_title_directors(
             TITLE_CREW_FILE,
