@@ -34,7 +34,7 @@ const NAME_TITLE_TABLE: &str = "name_title";
 #[tokio::main]
 async fn main() -> Result<(), String> {
     let args = Args::parse();
-    if Path::new(&args.path).exists() || args.overwrite {
+    if !Path::new(&args.path).exists() || args.overwrite {
         File::create(&args.path)
             .map_err(|e| format!("Failed to create file {} => {e}", args.path))?;
     }
