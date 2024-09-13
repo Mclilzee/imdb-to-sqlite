@@ -66,19 +66,19 @@ pub struct Args {
     #[arg(long = "title_director")]
     pub title_director: bool,
 
-    /// Title_Writer option will toggle the title_writer table parsing
+    /// Title_Writer option will toggle the title_writer table parsing. schema: (title_id NOT NULL, name_id INTEGER NOT NULL, FOREIGN KEY(title_id) REFERENCES title(id), FOREIGN KEY(name_id) REFERENCES name(id))
     #[arg(long = "title_writer")]
     pub title_writer: bool,
 
-    /// Title_Episode option will toggle the title_episode table parsing
+    /// Title_Episode option will toggle the title_episode table parsing. schema: (title_episode_id INTEGER NOT NULL, title_series_id INTEGER NOT NULL, episode_number INTEGER, season_number INTEGER, FOREIGN KEY(title_episode_id) REFERNECES title(id), FOREIGN KEY(title_series_id) REFERENCES title(id))
     #[arg(long = "title_episode")]
     pub title_episode: bool,
 
-    /// Title_Job option will toggle the title_job table parsing
+    /// Title_Job option will toggle the title_job table parsing. schema: (title_id INTEGER NOT NULL, name_id INTEGER NOT NULL, category TEXT NOT NULL, job TEXT, FOREIGN KEY(title_id) REFERENCES title(id), FOREIGN KEY(name_id) REFERENCES name(id))
     #[arg(long = "title_job")]
     pub title_job: bool,
 
-    /// Title_Character option will toggle the title_character table parsing
+    /// Title_Character option will toggle the title_character table parsing. schema: (title_id INTEGER NOT NULL, name_id INTEGER NOT NULL, character TEXT TEXT NOT NULL, FOREIGN KEY(title_id) REFERENCESE title(id), FOREIGN KEY(name_id) REFERENCES name(id))
     #[arg(long = "title_character")]
     pub title_character: bool,
 }
