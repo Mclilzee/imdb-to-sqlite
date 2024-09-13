@@ -38,8 +38,47 @@ pub struct Args {
     #[arg(short = 'e', long = "extra")]
     pub extra: bool,
 
-    /// This will parse the title table
-    #[arg(short = 't', long = "title")]
+    /// Name option will toggle the name table parsing
+    #[arg(long = "name")]
+    pub name: bool,
+
+    /// Name_Profession option will toggle the name_profession table parsing
+    #[arg(long = "name_profession")]
+    pub name_profession: bool,
+
+    /// Title option will toggle the title table parsing
+    #[arg(long = "title")]
     pub title: bool,
 
+    /// Name_Title option will toggle the name_title table parsing
+    #[arg(long = "name_title")]
+    pub name_title: bool,
+
+    /// Title_Rating option will toggle the name_title table parsing
+    #[arg(long = "title_rating")]
+    pub title_rating: bool,
+
+    /// Title_Genre option will toggle the title_genre table parsing
+    #[arg(long = "title_genre")]
+    pub title_genre: bool,
+
+    /// Title_Writer option will toggle the title_writer table parsing
+    #[arg(long = "title_writer")]
+    pub title_writer: bool,
+
+    /// Title_Director option will toggle the title_director table parsing
+    #[arg(long = "title_director")]
+    pub title_director: bool,
+
+    /// Title_Episode option will toggle the title_episode table parsing
+    #[arg(long = "title_episode")]
+    pub title_episode: bool,
+
+    /// Title_Job option will toggle the title_job table parsing
+    #[arg(long = "title_job")]
+    pub title_job: bool,
+
+    /// Title_Character option will toggle the title_character table parsing
+    #[arg(long = "title_job")]
+    pub title_character: bool,
 }
