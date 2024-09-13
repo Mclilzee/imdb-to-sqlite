@@ -43,6 +43,7 @@ pub async fn parse_names(
     file_name: &str,
     table_name: &str,
     conn: &mut SqliteConnection,
+    log: bool,
 ) -> Result<(), String> {
     println!("-- Inserting Into {table_name} --");
     create_table(table_name, conn).await?;
@@ -69,7 +70,7 @@ pub async fn parse_names(
         .enumerate()
     {
         let name = name?;
-        sqlx::query(&query)
+        let _ = sqlx::query(&query)
             .bind(name.id)
             .bind(&name.name)
             .bind(name.birth_date)
@@ -77,11 +78,13 @@ pub async fn parse_names(
             .execute(&mut *tx)
             .await
             .map_err(|e| {
-                format!(
-                    "Failed to insert {}, {}, {:?}, {:?} into {table_name} => {e}",
-                    name.id, name.name, name.birth_date, name.death_date
-                )
-            })?;
+                if log {
+                    eprintln!(
+                        "Failed to insert {}, {}, {:?}, {:?} into {table_name} => {e}",
+                        name.id, name.name, name.birth_date, name.death_date
+                    );
+                }
+            });
 
         percentage_printer(i, count);
     }

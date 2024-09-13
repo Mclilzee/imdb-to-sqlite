@@ -40,6 +40,7 @@ pub async fn parse_title_directors(
     file_name: &str,
     table_name: &str,
     conn: &mut SqliteConnection,
+    log: bool,
 ) -> Result<(), String> {
     println!("-- Inserting Into {table_name} --");
     create_table(table_name, conn).await?;
@@ -67,18 +68,19 @@ pub async fn parse_title_directors(
         let title_directors = title_directors?;
         for name_id in title_directors.name_ids.iter() {
             let query = format!("INSERT INTO {table_name} VALUES($1, $2)");
-            let result = sqlx::query(&query)
+            let _ = sqlx::query(&query)
                 .bind(title_directors.title_id)
                 .bind(name_id)
                 .execute(&mut *tx)
-                .await;
-
-            parse_sqlite_err(result, || {
-                format!(
-                    "Failed to insert {}, {} into {table_name}",
-                    title_directors.title_id, name_id
-                )
-            })?;
+                .await
+                .inspect_err(|e| {
+                    if log {
+                        eprintln!(
+                            "Failed to insert {}, {} into {table_name} => {e}",
+                            title_directors.title_id, name_id
+                        );
+                    }
+                });
         }
         percentage_printer(i, count);
     }

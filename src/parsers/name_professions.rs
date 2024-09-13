@@ -36,6 +36,7 @@ pub async fn parse_name_professions(
     file_name: &str,
     table_name: &str,
     conn: &mut SqliteConnection,
+    log: bool,
 ) -> Result<(), String> {
     println!("-- Inserting Into {table_name} --");
     create_table(table_name, conn).await?;
@@ -64,17 +65,19 @@ pub async fn parse_name_professions(
     {
         let name_profession = name_profession?;
         for profession in name_profession.professions.iter() {
-            sqlx::query(&query)
+            let _ = sqlx::query(&query)
                 .bind(name_profession.name_id)
                 .bind(profession)
                 .execute(&mut *tx)
                 .await
                 .map_err(|e| {
-                    format!(
-                        "Failed to insert {}, {} into {table_name} => {e}",
-                        name_profession.name_id, profession
-                    )
-                })?;
+                    if log {
+                        eprintln!(
+                            "Failed to insert {}, {} into {table_name} => {e}",
+                            name_profession.name_id, profession
+                        );
+                    }
+                });
         }
 
         percentage_printer(i, count);

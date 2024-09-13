@@ -56,6 +56,7 @@ pub async fn prase_titles(
     file_name: &str,
     table_name: &str,
     conn: &mut SqliteConnection,
+    log: bool,
 ) -> Result<(), String> {
     println!("-- Inserting Into {table_name} --");
     create_table(table_name, conn).await?;
@@ -91,16 +92,18 @@ pub async fn prase_titles(
             .execute(&mut *tx)
             .await
             .map_err(|e| {
-                format!(
-                    "Failed to insert {}, {}, {}, {}, {:?}, {:?} into {table_name} => {e}",
-                    title.id,
-                    title.primary_name,
-                    title.original_name,
-                    title.title_type,
-                    title.release_date,
-                    title.end_date
-                )
-            })?;
+                if log {
+                    eprintln!(
+                        "Failed to insert {}, {}, {}, {}, {:?}, {:?} into {table_name} => {e}",
+                        title.id,
+                        title.primary_name,
+                        title.original_name,
+                        title.title_type,
+                        title.release_date,
+                        title.end_date
+                    );
+                }
+            });
 
         percentage_printer(i, count);
     }

@@ -43,6 +43,7 @@ pub async fn parse_title_episodes(
     file_name: &str,
     table_name: &str,
     conn: &mut SqliteConnection,
+    log: bool,
 ) -> Result<(), String> {
     println!("-- Inserting Into {table_name} --");
     create_table(table_name, conn).await?;
@@ -69,22 +70,24 @@ pub async fn parse_title_episodes(
     {
         let title_episode = title_episode?;
         let query = format!("INSERT INTO {table_name} VALUES($1, $2, $3, $4)");
-        sqlx::query(&query)
+        let _ = sqlx::query(&query)
             .bind(title_episode.title_episode_id)
             .bind(title_episode.title_series_id)
             .bind(title_episode.season_number)
             .bind(title_episode.episode_number)
             .execute(&mut *tx)
             .await
-            .map_err(|e| {
-                format!(
-                    "Failed to insert {}, {}, {:?}, {:?}, into {table_name} => {e}",
-                    title_episode.title_episode_id,
-                    title_episode.title_series_id,
-                    title_episode.episode_number,
-                    title_episode.season_number
-                )
-            })?;
+            .inspect_err(|e| {
+                if log {
+                    eprintln!(
+                        "Failed to insert {}, {}, {:?}, {:?}, into {table_name} => {e}",
+                        title_episode.title_episode_id,
+                        title_episode.title_series_id,
+                        title_episode.episode_number,
+                        title_episode.season_number
+                    );
+                }
+            });
 
         percentage_printer(i, count);
     }

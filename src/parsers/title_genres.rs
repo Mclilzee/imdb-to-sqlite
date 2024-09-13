@@ -32,6 +32,7 @@ pub async fn parse_title_genres(
     file_name: &str,
     table_name: &str,
     conn: &mut SqliteConnection,
+    log: bool,
 ) -> Result<(), String> {
     println!("-- Inserting Into {table_name} --");
     create_table(table_name, conn).await?;
@@ -59,17 +60,19 @@ pub async fn parse_title_genres(
         let title_genres = title_genres?;
         for genre in title_genres.genres {
             let query = format!("INSERT INTO {table_name} VALUES($1, $2)");
-            sqlx::query(&query)
+            let _ = sqlx::query(&query)
                 .bind(title_genres.title_id)
                 .bind(&genre)
                 .execute(&mut *tx)
                 .await
-                .map_err(|e| {
-                    format!(
-                        "Failed to insert {}, {}, into {table_name} => {e}",
-                        title_genres.title_id, genre,
-                    )
-                })?;
+                .inspect_err(|e| {
+                    if log {
+                        eprintln!(
+                            "Failed to insert {}, {}, into {table_name} => {e}",
+                            title_genres.title_id, genre,
+                        );
+                    }
+                });
         }
         percentage_printer(i, count);
     }

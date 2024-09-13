@@ -40,6 +40,7 @@ pub async fn parse_title_characters(
     file_name: &str,
     table_name: &str,
     conn: &mut SqliteConnection,
+    log: bool,
 ) -> Result<(), String> {
     println!("-- Inserting Into {table_name} --");
     create_table(table_name, conn).await?;
@@ -66,19 +67,20 @@ pub async fn parse_title_characters(
         let title_characters = title_characters?;
         let query = format!("INSERT INTO {table_name} VALUES($1, $2, $3)");
         for character in title_characters.characters {
-            let result = sqlx::query(&query)
+            let _ = sqlx::query(&query)
                 .bind(title_characters.title_id)
                 .bind(title_characters.name_id)
                 .bind(&character)
                 .execute(&mut *tx)
-                .await;
-
-            parse_sqlite_err(result, || {
-                format!(
-                    "Failed to insert {}, {}, {} into {table_name}",
-                    title_characters.title_id, title_characters.name_id, character,
-                )
-            })?;
+                .await
+                .inspect_err(|e| {
+                    if log {
+                        eprintln!(
+                            "Failed to insert {}, {}, {} into {table_name} => {e}",
+                            title_characters.title_id, title_characters.name_id, character,
+                        );
+                    }
+                });
         }
 
         percentage_printer(i, count);

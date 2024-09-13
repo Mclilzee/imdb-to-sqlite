@@ -34,6 +34,7 @@ pub async fn parse_name_titles(
     file_name: &str,
     table_name: &str,
     conn: &mut SqliteConnection,
+    log: bool
 ) -> Result<(), String> {
     println!("-- Inserting Into {table_name} --");
     create_table(table_name, conn).await?;
@@ -61,18 +62,19 @@ pub async fn parse_name_titles(
     {
         if let Ok(name_title) = name_title {
             for title in name_title.titles.iter() {
-                let result = sqlx::query(&query)
+                let _ = sqlx::query(&query)
                     .bind(name_title.name_id)
                     .bind(title)
                     .execute(&mut *tx)
-                    .await;
-
-                parse_sqlite_err(result, || {
-                    format!(
-                        "Failed to insert {}, {} into {table_name}",
-                        name_title.name_id, title
-                    )
-                })?;
+                    .await
+                    .inspect_err(|e| {
+                        if log {
+                            eprintln!(
+                                "Failed to insert {}, {} into {table_name} => {e}",
+                                name_title.name_id, title
+                            );
+                        }
+                    });
             }
         }
 

@@ -43,6 +43,7 @@ pub async fn parse_title_ratings(
     file_name: &str,
     table_name: &str,
     conn: &mut SqliteConnection,
+    log: bool,
 ) -> Result<(), String> {
     println!("-- Inserting Into {table_name} --");
     create_table(table_name, conn).await?;
@@ -74,12 +75,16 @@ pub async fn parse_title_ratings(
             .bind(title_rating.votes)
             .execute(&mut *tx)
             .await
-            .map_err(|e| {
-                format!(
-                    "Failed to insert {}, {}, {} into {table_name} => {e}",
-                    title_rating.title_id, title_rating.average_rating, title_rating.votes,
-                )
-            })?;
+            .inspect_err(|e| {
+                if log {
+                    eprintln!(
+                        "Failed to insert {}, {}, {} into {table_name} => {e}",
+                        title_rating.title_id,
+                        title_rating.average_rating,
+                        title_rating.votes,
+                    );
+                }
+            });
         percentage_printer(i, count);
     }
     println!();

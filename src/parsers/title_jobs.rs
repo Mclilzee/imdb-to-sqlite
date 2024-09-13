@@ -51,6 +51,7 @@ pub async fn parse_title_jobs(
     file_name: &str,
     table_name: &str,
     conn: &mut SqliteConnection,
+    log: bool,
 ) -> Result<(), String> {
     println!("-- Inserting Into {table_name} --");
     create_table(table_name, conn).await?;
@@ -77,23 +78,24 @@ pub async fn parse_title_jobs(
         let title_principals = title_principals?;
 
         let query = format!("INSERT INTO {table_name} VALUES($1, $2, $3, $4)");
-        let result = sqlx::query(&query)
+        let _ = sqlx::query(&query)
             .bind(title_principals.title_id)
             .bind(title_principals.name_id)
             .bind(&title_principals.category)
             .bind(&title_principals.job)
             .execute(&mut *tx)
-            .await;
-
-        parse_sqlite_err(result, || {
-            format!(
-                "Failed to insert {}, {}, {}, {:?} into {table_name}",
-                title_principals.title_id,
-                title_principals.name_id,
-                title_principals.category,
-                title_principals.job
-            )
-        })?;
+            .await
+            .inspect_err(|e| {
+                if log {
+                    eprintln!(
+                        "Failed to insert {}, {}, {}, {:?} into {table_name} => {e}",
+                        title_principals.title_id,
+                        title_principals.name_id,
+                        title_principals.category,
+                        title_principals.job
+                    );
+                }
+            });
 
         percentage_printer(i, count);
     }
