@@ -50,7 +50,7 @@ pub struct Args {
     #[arg(long = "title")]
     pub title: bool,
 
-    /// Name_Title option will toggle the name_title table parsing
+    /// Name_Title option will toggle the name_title table parsing. schema: (name_id INTEGER NOT NULL, title_id INTEGER NOT NULL, FOREIGN KEY(name_id) REFERENCES name(id), FOREIGN KEY(title_id) REFERENCES title(id))
     #[arg(long = "name_title")]
     pub name_title: bool,
 
