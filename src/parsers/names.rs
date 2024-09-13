@@ -102,11 +102,10 @@ async fn create_table(
     conn: &mut SqliteConnection,
     overwrite: bool,
 ) -> Result<(), String> {
-
     if overwrite {
-        sqlx::raw_sql(format!("DROP TABLE {table_name}").as_str())
-        .execute(&mut *conn)
-        .await.map_err(|e| format!("Unable to create {table_name} table -> {e}"))?;
+        let _ = sqlx::raw_sql(format!("DROP TABLE {table_name}").as_str())
+            .execute(&mut *conn)
+            .await;
     }
 
     sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {table_name} (id integer primary key, name text not null, birth_year integer, death_year integer)").as_str())

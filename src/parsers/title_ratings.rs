@@ -45,7 +45,6 @@ pub async fn parse_title_ratings(
     conn: &mut SqliteConnection,
     args: &Args,
 ) -> Result<(), String> {
-
     create_table(table_name, conn, args.overwrite).await?;
     let file =
         File::open(file_name).map_err(|e| format!("Unable to read from {file_name} -> {e}"))?;
@@ -102,11 +101,11 @@ async fn create_table(
     overwrite: bool,
 ) -> Result<(), String> {
     if overwrite {
-        sqlx::raw_sql(format!("DROP TABLE {table_name}").as_str())
+        let _ = sqlx::raw_sql(format!("DROP TABLE {table_name}").as_str())
             .execute(&mut *conn)
-            .await
-            .map_err(|e| format!("Unable to create {table_name} table -> {e}"))?;
+            .await;
     }
+
     sqlx::raw_sql(format!(
             "CREATE TABLE IF NOT EXISTS {table_name} (title_id integer not null, average_rating real not null, votes integer not null, foreign key(title_id) references title(id))",
         ).as_str())
