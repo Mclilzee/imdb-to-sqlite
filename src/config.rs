@@ -6,11 +6,11 @@ use clap::Parser;
     version,
     about,
     long_about = r#"Parse and convert imdb TSV (Tab Saparated Values) Into a Sqlite tables.
-The tables can be found at https://developer.imdb.com/non-commercial-datasets/ make sure to read the License before using. The tables are required in their original format and name, unzipped.
+The tables are available to download from https://developer.imdb.com/non-commercial-datasets/ make sure to read the License before using. The tables are required in their original format and name, unzipped.
 
-All the table information is there but in our .schema it is adjusted differently separated into 3 categories, core, joining, extra. The core tables are the two main ones (title, name) which requires no foreign keys. joining tables will have foreign key to one of the core ones. The extra is also a joining tables but they are really slow to parse and contains over 40 mill rows
+You can read the table information from the site, but in our .schema it is adjusted differently, some tables into multiple sqlite tables. The tables are separated into 3 categories, core, joining, extra. The core tables are the two main ones (title, name) which requires no foreign keys. Joining tables which will have foreign key to one or both of the core tables. The extra is also a joining tables but they are really slow to parse and contains over 40 mill rows each.
 
-The options bellow can be toggled together to choose which tables to parse. You can choose per category, stand alone titles, or full, lite and extra versions which is pre-defined tables the rows which have their foreign keys constrait not found will be skipped from being inserted with no error shown. Otherwise errors will be showend and the insertion will stop, example: Trying to insert another row with the same primary key and previous one.
+The options bellow can be toggled at the same time to mix and match to your liking. You can choose per category, stand alone titles, or full, lite and extra versions which is pre-defined tables the rows which have their foreign keys constrait not found will be skipped from being inserted with no error shown. Otherwise errors will be showend and the insertion will stop, example: Trying to insert another row with the same primary key and previous one.
 
 Make sure to choose the overwrite option if you want to insert the same tables again otherwise you will be having duplicate entries for the joining tables with no primary keys."#
 )]
