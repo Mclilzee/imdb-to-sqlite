@@ -9,7 +9,7 @@ use clap::Parser;
 
 This program require IMDb dataset in their original names, format and unzipped. You can find it at https://developer.imdb.com/non-commercial-datasets/ free of charge. To use the dataset you need to comply with their Non-Commercial liecense, otherwise this program is not complicit in any lisence breaking.
 
-The dataset information can be found at IMDb official site. The tables are separated into 3 categories, core, joining, extra. The core tables are the two main ones (title, name) which requires no foreign keys. Joining tables which will have foreign key to one or both of the core tables. The extra is also a joining tables but they are really slow to parse and contains over 40 mill rows each.
+The dataset information can be found at IMDb official site. The tables are separated into 3 categories, core, joining, extra. The core tables are the two main ones (title, name) which requires no foreign keys. Joining tables which will have foreign key to one or both of the core tables. The extra is also a joining tables but they are really slow to parse and contains over 80 mill rows each.
 
 The options below can be toggled at the same time to mix and match to your liking. You can choose per category, stand alone titles, or full, lite and extra versions which is pre-defined tables the rows which have their foreign keys constrait not found will be skipped from being inserted with no error shown. Otherwise errors will be showend and the insertion will stop, example: Trying to insert another row with the same primary key and previous one.
 
@@ -24,7 +24,7 @@ pub struct Args {
     pub log: bool,
 
     /// Overwrite option will the tables before being inserted into. Will only erase the tables that are toggle through the table flags.
-    #[arg(short = 'O', long = "overwrite")]
+    #[arg(short = 'o', long = "overwrite")]
     pub overwrite: bool,
 
     /// Lite option will toggle the core tables and the one joining table between them (title, name, name_title)
