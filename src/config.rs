@@ -19,6 +19,9 @@ pub struct Args {
     /// File name of the database, if file doesn't exist, then file will be created
     pub path: String,
 
+    /// Log option to show insertion errors, examples: Insertion errors due to forgein key constraint, or primary key already exists. By default those errors are skiped and not printed out.
+    pub log: bool,
+
     /// Overwrite option will erase all the content in the file. Only choose it if you want to do a fresh conversion otherwise all the old ones will be replaced.
     #[arg(short = 'O', long = "overwrite")]
     pub overwrite: bool,
