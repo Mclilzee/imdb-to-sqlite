@@ -39,6 +39,7 @@ pub async fn parse_name_titles(
     conn: &mut SqliteConnection,
     args: &Args,
 ) -> Result<(), String> {
+
     create_table(table_name, conn, args.overwrite).await?;
 
     let file =
@@ -46,6 +47,7 @@ pub async fn parse_name_titles(
     let mut reader = BufReader::new(file);
     let count = (&mut reader).lines().skip(1).count();
     println!("-- Inserting {count} entries into {table_name} --");
+
     reader
         .rewind()
         .map_err(|e| format!("Failed to read file {file_name} after counting => {e}"))?;

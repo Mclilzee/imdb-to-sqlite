@@ -45,13 +45,14 @@ pub async fn parse_title_episodes(
     conn: &mut SqliteConnection,
     args: &Args,
 ) -> Result<(), String> {
-    println!("-- Inserting Into {table_name} --");
-    create_table(table_name, conn, args.overwrite).await?;
 
+    create_table(table_name, conn, args.overwrite).await?;
     let file =
         File::open(file_name).map_err(|e| format!("Unable to read from {file_name} -> {e}"))?;
     let mut reader = BufReader::new(file);
     let count = (&mut reader).lines().skip(1).count();
+    println!("-- Inserting {count} entries into {table_name} --");
+
     reader
         .rewind()
         .map_err(|e| format!("Failed to read file {file_name} after counting => {e}"))?;

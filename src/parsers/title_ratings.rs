@@ -45,6 +45,7 @@ pub async fn parse_title_ratings(
     conn: &mut SqliteConnection,
     args: &Args,
 ) -> Result<(), String> {
+
     create_table(table_name, conn, args.overwrite).await?;
     let file =
         File::open(file_name).map_err(|e| format!("Unable to read from {file_name} -> {e}"))?;
