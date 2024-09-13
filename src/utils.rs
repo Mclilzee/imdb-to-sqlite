@@ -1,5 +1,5 @@
-use std::{fmt::Display, io::{stdout, Write}};
 use sqlx::sqlite::SqliteQueryResult;
+use std::io::{stdout, Write};
 
 pub fn percentage_printer(progress: usize, total: usize) {
     if progress % 10000 != 0 {
@@ -21,7 +21,10 @@ pub fn percentage_printer(progress: usize, total: usize) {
     stdout().flush().unwrap();
 }
 
-pub fn parse_sqlite_err(result: Result<SqliteQueryResult, sqlx::Error>, err_f: impl Fn() -> String) -> Result<(), String> {
+pub fn parse_sqlite_err(
+    result: Result<SqliteQueryResult, sqlx::Error>,
+    err_f: impl Fn() -> String,
+) -> Result<(), String> {
     if let Err(error) = result {
         if let Some(e) = error.as_database_error().and_then(|e| e.code()) {
             if e != "787" {
