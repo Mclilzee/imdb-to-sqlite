@@ -17,14 +17,28 @@ You can find it by going to
 To use the dataset you need to comply with their Non-Commercial liecense,
 otherwise this program is not complicit in any lisence breaking.
 
-The dataset information can be found at IMDb official site. The tables are separated into 3 categories, core, joining, extra. The core tables are the two main ones (title, name) which requires no foreign keys. Joining tables which will have foreign key to one or both of the core tables. The extra is also a joining tables but they are really slow to parse and contains over 80 mill rows each.
+The dataset information can be found at IMDb official site.
+The tables are separated into 3 categories, core, joining, extra.
+The core tables are the two main ones (title, name) which requires no foreign keys.
+Joining tables which will have foreign key to one or both of the core tables.
+The extra is also a joining tables but they are really
+slow to parse and contains over 80 mill rows each.
 
-The options below can be toggled at the same time to mix and match to your liking. You can choose per category, stand alone titles, or full, lite and extra versions which is pre-defined tables the rows which have their foreign keys constrait not found will be skipped from being inserted with no error shown. Otherwise errors will be showend and the insertion will stop, example: Trying to insert another row with the same primary key and previous one.
+The options below can be toggled at the same time to mix and match
+to your liking. You can choose per category, stand alone titles,
+or full, lite and extra versions which is pre-defined tables the
+rows which have their foreign keys
+constrait not found will be skipped from being inserted with no error shown.
+Otherwise errors will be showend and the insertion will stop,
+example: Trying to insert another row with the same primary key and previous one.
 
-Make sure to choose the overwrite option if you want to insert the same tables again otherwise you will be having duplicate entries for the joining tables with no primary keys.
-
+Make sure to choose the overwrite option if you want to insert
+the same tables again otherwise you will be having
+duplicate entries for the joining tables with no primary keys.
 
 ## Usage
+
+```terminal
 Usage: imdbsql [OPTIONS] <PATH>
 
 Arguments:
@@ -138,3 +152,4 @@ Options:
 
   -V, --version
           Print version
+```
