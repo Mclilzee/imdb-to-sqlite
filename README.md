@@ -2,6 +2,8 @@
 
 A tool to convert IMDb dataset to sqlite for ease of use. This tool is not affialated with IMDb, this tool was built to be used as educational or personal purposes and does not support using the dataset without following [IMDb Non-Commersial license](https://developer.imdb.com/non-commercial-datasets/)
 
+![Loading bar showing progress of parsed data insertion into tables](./asset/image.png)
+
 ## Installation
 
 Download one of the release pre-built binaries,
