@@ -77,7 +77,7 @@ pub struct Args {
     ///
     /// File required (name.basics.tsv)
     ///
-    /// schema: (name_id INTEGER NOT NULL, title_id INTEGER NOT NULL, FOREIGN KEY(name_id) REFERENCES name(id), FOREIGN KEY(title_id) REFERENCES title(id))
+    /// schema: (name_id INTEGER NOT NULL, title_id INTEGER NOT NULL, FOREIGN KEY(name_id) REFERENCES name(id), FOREIGN KEY(title_id) REFERENCES title(id) PRIMARY KEY (name_id, title_id))
     #[arg(long = "name_title")]
     pub name_title: bool,
 
