@@ -100,7 +100,7 @@ async fn create_table(
             .await;
     }
 
-    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {table_name} (name_id integer not null, title_id integer not null, foreign key(name_id) references name(id), foreign key(title_id) references title(id))").as_str())
+    sqlx::raw_sql(format!("CREATE TABLE IF NOT EXISTS {table_name} (name_id integer not null, title_id integer not null, foreign key(name_id) references name(id), foreign key(title_id) references title(id) PRIMARY KEY (name_id, title_id))").as_str())
         .execute(conn)
         .await.map_err(|e| format!("Unable to create {table_name} table -> {e}"))?;
 
